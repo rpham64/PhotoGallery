@@ -1,20 +1,148 @@
 package com.bignerdranch.android.photogallery;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
+ * Main Fragment hosted by PhotoGalleryActivity
+ *
  * Created by Rudolf on 3/12/2016.
  */
 public class PhotoGalleryFragment extends Fragment {
 
+    // TAG for filtering log messages
+    private static final String TAG = "PhotoGalleryFragment";
+
+    // RecyclerView
+    private RecyclerView mPhotoRecyclerView;
+
+    // List of Photos (GalleryItem)
+    private List<GalleryItem> mItems = new ArrayList<>();
+
     public static PhotoGalleryFragment newInstance() {
+        return new PhotoGalleryFragment();
+    }
 
-        Bundle args = new Bundle();
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);            // Retain fragment state on configuration changes
+        new FetchItemsTask().execute();
+    }
 
-        PhotoGalleryFragment fragment = new PhotoGalleryFragment();
-        fragment.setArguments(args);
-        return fragment;
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+        View view = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
+        mPhotoRecyclerView =
+                (RecyclerView) view.findViewById(R.id.fragment_photo_gallery_recycler_view);
+        mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+
+        setupAdapter();
+
+        return view;
+    }
+
+    /**
+     * Helper method that binds RecyclerView to Adapter
+     */
+    private void setupAdapter() {
+
+        // Check: PhotoGalleryFragment is attached to activity (so getActivity() is not null)
+        if (isAdded()) {
+            mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
+        }
+
+    }
+
+
+    /**
+     * Adapter class that connects RecyclerView layout to PhotoHolder
+     */
+    private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder> {
+
+        private List<GalleryItem> mGalleryItems;
+
+        public PhotoAdapter(List<GalleryItem> galleryItems) {
+            mGalleryItems = galleryItems;
+        }
+
+        @Override
+        public PhotoHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            TextView textView = new TextView(getActivity());
+            return new PhotoHolder(textView);
+        }
+
+        @Override
+        public void onBindViewHolder(PhotoHolder photoHolder, int position) {
+            GalleryItem galleryItem = mGalleryItems.get(position);
+            photoHolder.bindGalleryItem(galleryItem);
+        }
+
+        @Override
+        public int getItemCount() {
+            return mGalleryItems.size();
+        }
+    }
+
+    /**
+     * ViewHolder class that binds GalleryItem to a TextView
+     */
+    private class PhotoHolder extends RecyclerView.ViewHolder {
+
+        private TextView mTitleTextView;
+
+        public PhotoHolder(View itemView) {
+            super(itemView);
+
+            mTitleTextView = (TextView) itemView;
+        }
+
+        public void bindGalleryItem(GalleryItem galleryItem) {
+            mTitleTextView.setText(galleryItem.toString());
+        }
+    }
+
+    /**
+     * Fetches data from URL String using background and main threads
+     */
+    private class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>> {
+
+        /**
+         * Retrieves data from a website using background thread
+         *
+         * @param params
+         * @return
+         */
+        @Override
+        protected List<GalleryItem> doInBackground(Void... params) {
+            return new FlickrFetchr().fetchItems();
+        }
+
+        /**
+         * Sets up Adapter in main thread after background thread
+         *
+         * @param galleryItems fetched in doInBackground
+         */
+        @Override
+        protected void onPostExecute(List<GalleryItem> galleryItems) {
+            mItems = galleryItems;
+
+            setupAdapter();
+        }
     }
 
 }
