@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,9 @@ public class PhotoGalleryFragment extends Fragment {
     // List of Photos (GalleryItem)
     private List<GalleryItem> mItems = new ArrayList<>();
 
+    // Last page fetched
+    private int lastPageFetched = 1;
+
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
     }
@@ -49,7 +53,34 @@ public class PhotoGalleryFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
         mPhotoRecyclerView =
                 (RecyclerView) view.findViewById(R.id.fragment_photo_gallery_recycler_view);
-        mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+
+        // Setup GridLayoutManager as RecyclerView's layout manager
+        final GridLayoutManager mLayoutManager = new GridLayoutManager(getActivity(), 3);
+
+        mPhotoRecyclerView.setLayoutManager(mLayoutManager);
+
+        // Implement endless page scrolling
+        mPhotoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+
+                PhotoAdapter adapter = (PhotoAdapter) recyclerView.getAdapter();
+                int lastPosition = adapter.getLastBoundPosition();
+                int loadBufferPosition = 1;
+
+                if (lastPosition >= adapter.getItemCount() - mLayoutManager.getSpanCount()
+                    - loadBufferPosition) {
+                    new FetchItemsTask().execute(lastPosition + 1);
+                }
+
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+            }
+        });
 
         setupAdapter();
 
@@ -74,7 +105,11 @@ public class PhotoGalleryFragment extends Fragment {
      */
     private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder> {
 
+        // List of Pictures
         private List<GalleryItem> mGalleryItems;
+
+        // Position of last GalleryItem
+        private int lastBoundPosition;
 
         public PhotoAdapter(List<GalleryItem> galleryItems) {
             mGalleryItems = galleryItems;
@@ -89,12 +124,20 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         public void onBindViewHolder(PhotoHolder photoHolder, int position) {
             GalleryItem galleryItem = mGalleryItems.get(position);
+            lastBoundPosition = position;
+
+            Log.i(TAG, "Last bound position: " + lastBoundPosition);
+
             photoHolder.bindGalleryItem(galleryItem);
         }
 
         @Override
         public int getItemCount() {
             return mGalleryItems.size();
+        }
+
+        public int getLastBoundPosition() {
+            return lastBoundPosition;
         }
     }
 
@@ -119,7 +162,7 @@ public class PhotoGalleryFragment extends Fragment {
     /**
      * Fetches data from URL String using background and main threads
      */
-    private class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>> {
+    private class FetchItemsTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
 
         /**
          * Retrieves data from a website using background thread
@@ -128,8 +171,8 @@ public class PhotoGalleryFragment extends Fragment {
          * @return
          */
         @Override
-        protected List<GalleryItem> doInBackground(Void... params) {
-            return new FlickrFetchr().fetchItems();
+        protected List<GalleryItem> doInBackground(Integer... params) {
+            return new FlickrFetchr().fetchItems(lastPageFetched);
         }
 
         /**
@@ -139,9 +182,18 @@ public class PhotoGalleryFragment extends Fragment {
          */
         @Override
         protected void onPostExecute(List<GalleryItem> galleryItems) {
-            mItems = galleryItems;
 
-            setupAdapter();
+            if (lastPageFetched > 1) {
+                mItems.addAll(galleryItems);
+                mPhotoRecyclerView.getAdapter().notifyDataSetChanged();
+            }
+            else {
+                mItems = galleryItems;
+
+                setupAdapter();
+            }
+
+            lastPageFetched++;
         }
     }
 

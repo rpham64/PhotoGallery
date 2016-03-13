@@ -3,9 +3,9 @@ package com.bignerdranch.android.photogallery;
 import android.net.Uri;
 import android.util.Log;
 
-import org.json.JSONArray;
+import com.google.gson.Gson;
+
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -85,7 +85,7 @@ public class FlickrFetchr {
     /**
      * Builds an appropriate request URL and fetches its contents
      */
-    public List<GalleryItem> fetchItems() {
+    public List<GalleryItem> fetchItems(int page) {
 
         List<GalleryItem> items = new ArrayList<>();
 
@@ -99,6 +99,7 @@ public class FlickrFetchr {
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
+                    .appendQueryParameter("page", Integer.toString(page))
                     .build().toString();
 
             // Fetch contents from request URL
@@ -106,9 +107,7 @@ public class FlickrFetchr {
 
             Log.i(TAG, "Received JSON: " + jsonString);
 
-            JSONObject jsonObject = new JSONObject(jsonString);
-
-            parseItems(items, jsonObject);
+            parseItems(items, jsonString);
 
         } catch (JSONException jsonException) {
 
@@ -123,29 +122,36 @@ public class FlickrFetchr {
         return items;
     }
 
-    private void parseItems(List<GalleryItem> items, JSONObject jsonObject)
+    /**
+     * Deserializes JSON into Java objects
+     *
+     * @param items
+     * @param jsonString
+     * @throws IOException
+     * @throws JSONException
+     */
+    private void parseItems(List<GalleryItem> items, String jsonString)
         throws IOException, JSONException {
 
-        JSONObject photosJSONObject = jsonObject.getJSONObject("photos");
-        JSONArray photosJSONArray = photosJSONObject.getJSONArray("photo");
+        // Deserialize JSON to Java object using Gson
+        FlickrResponse flickrResponse = new Gson().fromJson(jsonString, FlickrResponse.class);
 
-        for (int i = 0; i < photosJSONArray.length(); i++) {
+        // List of photos
+        List<Photo> photos = flickrResponse.getPhotos().getPhoto();
 
-            JSONObject photoJSONObject = photosJSONArray.getJSONObject(i);
+        for (int i = 0; i < photos.size(); i++) {
 
-            GalleryItem item = new GalleryItem();
+            Photo photo = photos.get(i);
+            GalleryItem galleryItem = new GalleryItem();
 
-            // Add photo Id, caption, and url (if it exists) to GalleryItem item
-            item.setId(photoJSONObject.getString("id"));
-            item.setCaption(photoJSONObject.getString("title"));
+            // Ignore image if url_s does not exist
+            if (photo.getUrl_s() == null) continue;
 
-            // Ignore images without an image url
-            if (!photoJSONObject.has("url_s")) { continue; }
+            galleryItem.setId(photo.getId());
+            galleryItem.setCaption(photo.getTitle());
+            galleryItem.setUrl(photo.getUrl_s());
 
-            item.setUrl(photoJSONObject.getString("url_s"));
-
-            // Add item to list of GalleryItems
-            items.add(item);
+            items.add(galleryItem);
         }
 
     }
