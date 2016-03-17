@@ -201,7 +201,7 @@ public class PhotoGalleryFragment extends Fragment {
     }
 
     /**
-     * ViewHolder class that binds GalleryItem to a TextView
+     * ViewHolder class that binds GalleryItem to an ImageView (ie. adds picture to UI)
      */
     private class PhotoHolder extends RecyclerView.ViewHolder {
 
