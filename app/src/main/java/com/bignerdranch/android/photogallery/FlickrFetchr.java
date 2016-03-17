@@ -84,6 +84,8 @@ public class FlickrFetchr {
 
     /**
      * Builds an appropriate request URL and fetches its contents
+     *
+     * Called in background thread
      */
     public List<GalleryItem> fetchItems(int page) {
 

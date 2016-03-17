@@ -1,20 +1,18 @@
 package com.bignerdranch.android.photogallery;
 
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +33,6 @@ public class PhotoGalleryFragment extends Fragment {
     // List of Photos (GalleryItem)
     private List<GalleryItem> mItems = new ArrayList<>();
 
-    // HandlerThread for managing photo downloads
-    private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
-
     // Last page fetched
     private int lastPageFetched = 1;
 
@@ -50,34 +45,6 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);            // Retain fragment state on configuration changes
         new FetchItemsTask().execute();
-
-        Handler responseHandler = new Handler();
-        mThumbnailDownloader = new ThumbnailDownloader<>(responseHandler);
-
-        mThumbnailDownloader.setThumbnailDownloadListener(
-
-                new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
-
-                    /**
-                     * Binds thumbnail drawable to PhotoHolder on download
-                     *
-                     * @param photoHolder
-                     * @param bitmap
-                     */
-                    @Override
-                    public void onThumbnailDownloadeded(PhotoHolder photoHolder, Bitmap bitmap) {
-                        Drawable drawable = new BitmapDrawable(getResources(), bitmap);
-                        photoHolder.bindDrawable(drawable);
-                    }
-
-                }
-
-        );
-
-        mThumbnailDownloader.start();
-        mThumbnailDownloader.getLooper();
-
-        Log.i(TAG, "Background thread started.");
     }
 
     @Nullable
@@ -124,20 +91,6 @@ public class PhotoGalleryFragment extends Fragment {
         return view;
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        mThumbnailDownloader.clearQueue();      // Clean out downloader
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        mThumbnailDownloader.quit();
-
-        Log.i(TAG, "Background thread destroyed.");
-    }
 
     /**
      * Helper method that binds RecyclerView to Adapter
@@ -182,12 +135,7 @@ public class PhotoGalleryFragment extends Fragment {
 
 //            Log.i(TAG, "Last bound position: " + lastBoundPosition);
 
-            // Default Placeholder Image (displays when no image exists)
-            Drawable placeholder = getResources().getDrawable(R.drawable.nothing_to_do_here);
-            photoHolder.bindDrawable(placeholder);
-
-            // Queue downloaded thumbnail image
-            mThumbnailDownloader.queueThumbnail(photoHolder, galleryItem.getUrl());
+            photoHolder.bindGalleryItem(galleryItem);
         }
 
         @Override
@@ -216,6 +164,13 @@ public class PhotoGalleryFragment extends Fragment {
 
         public void bindDrawable(Drawable drawable) {
             mItemImageView.setImageDrawable(drawable);
+        }
+
+        public void bindGalleryItem(GalleryItem galleryItem) {
+            Picasso.with(getActivity())
+                    .load(galleryItem.getUrl())
+                    .placeholder(R.drawable.nothing_to_do_here)
+                    .into(mItemImageView);
         }
     }
 
