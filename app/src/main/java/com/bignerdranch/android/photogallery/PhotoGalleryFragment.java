@@ -7,7 +7,12 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -34,7 +39,7 @@ public class PhotoGalleryFragment extends Fragment {
     private List<GalleryItem> mItems = new ArrayList<>();
 
     // Last page fetched
-    private int lastPageFetched = 1;
+    private int lastPageFetched = 0;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -44,7 +49,8 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);            // Retain fragment state on configuration changes
-        new FetchItemsTask().execute();
+        setHasOptionsMenu(true);            // Include toolbar
+        updateItems();
     }
 
     @Nullable
@@ -75,9 +81,11 @@ public class PhotoGalleryFragment extends Fragment {
                 int numColumns = mLayoutManager.getSpanCount();
                 int loadBufferPosition = 1;
 
+                String query = QueryPreferences.getStoredQuery(getActivity());
+
                 // If user scrolled to bottom of page, fetch another page of items
                 if (lastPosition >= totalNumberOfItems - numColumns - loadBufferPosition) {
-                    new FetchItemsTask().execute(lastPosition + 1);
+                    new FetchItemsTask(query).execute(lastPosition + 1);
                 }
 
             }
@@ -91,6 +99,73 @@ public class PhotoGalleryFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onCreateOptionsMenu(final Menu menu, MenuInflater menuInflater) {
+        super.onCreateOptionsMenu(menu, menuInflater);
+
+        menuInflater.inflate(R.menu.fragment_photo_gallery, menu);
+
+        final MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+        final SearchView searchView = (SearchView) searchItem.getActionView();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+
+                Log.d(TAG, "QueryTextSubmit: " + s);
+
+                QueryPreferences.setStoredQuery(getActivity(), s);
+                searchView.clearFocus();            // Hides keyboard on submit
+                searchView.setQuery("", false);
+                searchView.setIconified(true);      // Collapses SearchView widget
+
+                updateItems();
+
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                Log.d(TAG, "QueryTextChange: " + s);
+                return false;
+            }
+        });
+
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String query = QueryPreferences.getStoredQuery(getActivity());
+                searchView.setQuery(query, false);
+            }
+        });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+
+            // Removes query from QueryPreferences
+            case R.id.menu_item_clear:
+
+                QueryPreferences.setStoredQuery(getActivity(), null);
+                updateItems();
+
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
+
+
+    }
+
+    private void updateItems() {
+        String query = QueryPreferences.getStoredQuery(getActivity());
+        lastPageFetched = 1;
+        new FetchItemsTask(query).execute(lastPageFetched);
+    }
 
     /**
      * Helper method that binds RecyclerView to Adapter
@@ -169,7 +244,7 @@ public class PhotoGalleryFragment extends Fragment {
         public void bindGalleryItem(GalleryItem galleryItem) {
             Picasso.with(getActivity())
                     .load(galleryItem.getUrl())
-                    .placeholder(R.drawable.nothing_to_do_here)
+                    .placeholder(R.drawable.gray)
                     .into(mItemImageView);
         }
     }
@@ -179,6 +254,12 @@ public class PhotoGalleryFragment extends Fragment {
      */
     private class FetchItemsTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
 
+        private String mQuery;
+
+        public FetchItemsTask(String query) {
+            mQuery = query;
+        }
+
         /**
          * Retrieves data from a website using background thread
          *
@@ -187,7 +268,13 @@ public class PhotoGalleryFragment extends Fragment {
          */
         @Override
         protected List<GalleryItem> doInBackground(Integer... params) {
-            return new FlickrFetchr().fetchItems(lastPageFetched);
+
+            if (mQuery == null) {
+                return new FlickrFetchr().fetchRecentPhotos(lastPageFetched);
+            } else {
+                return new FlickrFetchr().searchPhotos(mQuery, lastPageFetched);
+            }
+
         }
 
         /**
