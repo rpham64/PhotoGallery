@@ -108,6 +108,7 @@ public class PhotoGalleryFragment extends Fragment {
         final MenuItem searchItem = menu.findItem(R.id.menu_item_search);
         final SearchView searchView = (SearchView) searchItem.getActionView();
 
+        /** SearchView Query Text Listener */
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
@@ -131,6 +132,7 @@ public class PhotoGalleryFragment extends Fragment {
             }
         });
 
+        /** SearchView Icon Click Listener */
         searchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -138,6 +140,16 @@ public class PhotoGalleryFragment extends Fragment {
                 searchView.setQuery(query, false);
             }
         });
+
+        /** Toggle Title for Polling Menu Button */
+        MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
+
+        if (PollService.isServiceAlarmOn(getActivity())) {
+            toggleItem.setTitle(R.string.stop_polling);
+        } else {
+            toggleItem.setTitle(R.string.start_polling);
+        }
+
     }
 
     @Override
@@ -150,6 +162,15 @@ public class PhotoGalleryFragment extends Fragment {
 
                 QueryPreferences.setStoredQuery(getActivity(), null);
                 updateItems();
+
+                return true;
+
+            // Sets alarm on or off
+            case R.id.menu_item_toggle_polling:
+
+                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+                PollService.setServiceAlarm(getActivity(), lastPageFetched, shouldStartAlarm);
+                getActivity().invalidateOptionsMenu();
 
                 return true;
 
