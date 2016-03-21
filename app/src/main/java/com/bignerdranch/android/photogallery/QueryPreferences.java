@@ -16,6 +16,9 @@ public class QueryPreferences {
     // KEY for storing ID of most recently fetched picture
     private static final String PREF_LAST_RESULT_ID = "lastResultId";
 
+    // KEY for storing PollService's alarm status
+    private static final String PREF_IS_ALARM_ON = "isAlarmOn";
+
     public static String getStoredQuery(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getString(PREF_SEARCH_QUERY, null);
@@ -37,6 +40,18 @@ public class QueryPreferences {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putString(PREF_LAST_RESULT_ID, lastResultId)
+                .apply();
+    }
+
+    public static boolean isAlarmOn(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(PREF_IS_ALARM_ON, false);
+    }
+
+    public static void setAlarmOn(Context context, boolean turnOn) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(PREF_IS_ALARM_ON, turnOn)
                 .apply();
     }
 

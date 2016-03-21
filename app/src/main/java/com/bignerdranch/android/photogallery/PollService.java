@@ -1,5 +1,6 @@
 package com.bignerdranch.android.photogallery;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
@@ -10,7 +11,6 @@ import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import java.util.List;
@@ -24,9 +24,20 @@ public class PollService extends IntentService {
 
     private static final String TAG = "PollService";
 
-    private static final String EXTRA_PAGE = "com.bignerdranch.android.photogallery.lastpagedfetched";
+    private static final String EXTRA_PAGE =
+            "com.bignerdranch.android.photogallery.lastpagedfetched";
 
-    private static final long POLL_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
+    private static final long POLL_INTERVAL = 1000 * 60;    // 60 seconds
+
+    public static final String ACTION_SHOW_NOTIFICATION =
+            "com.bignerdranch.android.photogallery.SHOW_NOTIFICATION";
+
+    public static final String PERMISSION_PRIVATE = "com.bignerdranch.android.photogallery.PRIVATE";
+
+    // Ordered Broadcast Intent strings
+    public static final String REQUEST_CODE = "REQUEST_CODE";
+    public static final String NOTIFICATION = "NOTIFICATION";
+
 
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
@@ -36,7 +47,7 @@ public class PollService extends IntentService {
     }
 
     public static Intent newIntent(Context context) {
-        return newIntent(context, 1);
+        return newIntent(context, 0);
     }
 
     public static Intent newIntent(Context context, int lastPageFetched) {
@@ -51,13 +62,13 @@ public class PollService extends IntentService {
      * Turns alarm on or off
      *
      * @param context
-     * @param isOn
+     * @param turnOn
      */
-    public static void setServiceAlarm(Context context, boolean isOn) {
-        setServiceAlarm(context, 1, isOn);
+    public static void setServiceAlarm(Context context, boolean turnOn) {
+        setServiceAlarm(context, 0, turnOn);
     }
 
-    public static void setServiceAlarm(Context context, int lastPageFetched, boolean isOn) {
+    public static void setServiceAlarm(Context context, int lastPageFetched, boolean turnOn) {
 
         // Construct PollIntent to start PollService
         Intent intent = PollService.newIntent(context, lastPageFetched);
@@ -67,13 +78,16 @@ public class PollService extends IntentService {
                 context.getSystemService(Context.ALARM_SERVICE);
 
         // Set alarm or cancel it
-        if (isOn) {
+        if (turnOn) {
             alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME,
                     SystemClock.elapsedRealtime(), POLL_INTERVAL, pendingIntent);
         } else {
             alarmManager.cancel(pendingIntent);
             pendingIntent.cancel();
         }
+
+        // Write to QueryPreferences when alarm is set
+        QueryPreferences.setAlarmOn(context, turnOn);
 
     }
 
@@ -92,6 +106,11 @@ public class PollService extends IntentService {
         return pendingIntent != null;
     }
 
+    /**
+     * Handles intent sent by AlarmManager in a time interval
+     *
+     * @param intent
+     */
     @Override
     protected void onHandleIntent(Intent intent) {
 
@@ -116,7 +135,7 @@ public class PollService extends IntentService {
 
         String resultId = items.get(0).getId();
 
-        // 4) Check: resultId == lastResultId
+        // 4) Check: search results are old or new
         if (resultId.equals(lastResultId)) {
 
             Log.i(TAG, "Got an old result: " + resultId);
@@ -139,14 +158,31 @@ public class PollService extends IntentService {
                     .setAutoCancel(true)
                     .build();
 
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-            notificationManager.notify(0, notification);
-
+            // Display Notification
+            showBackgroundNotification(0, notification);
         }
 
         // 5) Store first result back into QueryPreferences
         QueryPreferences.setLastResultId(this, resultId);
 
+    }
+
+    /**
+     * Sends out ordered broadcast intent to display notification
+     *
+     * @param requestCode
+     * @param notification
+     */
+    private void showBackgroundNotification(int requestCode, Notification notification) {
+
+        Intent intent = new Intent(ACTION_SHOW_NOTIFICATION);
+        intent.putExtra(REQUEST_CODE, requestCode);
+        intent.putExtra(NOTIFICATION, notification);
+
+        // Sends out ordered broadcast to all broadcast receivers
+        // (VisibleFragment -> PhotoGalleryActivity (ONLY if visible), NotificationReceiver)
+        sendOrderedBroadcast(intent, PERMISSION_PRIVATE, null, null,
+                Activity.RESULT_OK, null, null);
     }
 
     /**

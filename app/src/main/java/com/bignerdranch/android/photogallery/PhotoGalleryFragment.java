@@ -4,7 +4,6 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -27,7 +26,7 @@ import java.util.List;
  *
  * Created by Rudolf on 3/12/2016.
  */
-public class PhotoGalleryFragment extends Fragment {
+public class PhotoGalleryFragment extends VisibleFragment {
 
     // TAG for filtering log messages
     private static final String TAG = "PhotoGalleryFragment";
@@ -184,7 +183,7 @@ public class PhotoGalleryFragment extends Fragment {
 
     private void updateItems() {
         String query = QueryPreferences.getStoredQuery(getActivity());
-        lastPageFetched = 1;
+        lastPageFetched = 0;
         new FetchItemsTask(query).execute(lastPageFetched);
     }
 
@@ -306,7 +305,7 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         protected void onPostExecute(List<GalleryItem> galleryItems) {
 
-            if (lastPageFetched > 1) {
+            if (lastPageFetched > 0) {
                 mItems.addAll(galleryItems);
                 mPhotoRecyclerView.getAdapter().notifyDataSetChanged();
             }
