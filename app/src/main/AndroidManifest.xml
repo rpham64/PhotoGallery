@@ -30,6 +30,10 @@
             </intent-filter>
         </activity>
 
+        <!-- Other Activities -->
+        <activity android:name=".PhotoPageActivity"
+                  android:configChanges="keyboardHidden|orientation|screenSize"/>
+
         <!-- Polling Service -->
         <service android:name=".PollService"/>
 

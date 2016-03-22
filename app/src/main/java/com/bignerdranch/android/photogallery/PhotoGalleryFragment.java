@@ -1,5 +1,6 @@
 package com.bignerdranch.android.photogallery;
 
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -68,7 +69,7 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
         setupAdapter();
 
-        // Implement endless page scrolling
+        /** Endless Page Scrolling */
         mPhotoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
             @Override
@@ -246,15 +247,17 @@ public class PhotoGalleryFragment extends VisibleFragment {
     /**
      * ViewHolder class that binds GalleryItem to an ImageView (ie. adds picture to UI)
      */
-    private class PhotoHolder extends RecyclerView.ViewHolder {
+    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private ImageView mItemImageView;
+        private GalleryItem mGalleryItem;
 
         public PhotoHolder(View itemView) {
             super(itemView);
 
             mItemImageView =
                     (ImageView) itemView.findViewById(R.id.fragment_photo_gallery_image_view);
+            itemView.setOnClickListener(this);
         }
 
         public void bindDrawable(Drawable drawable) {
@@ -262,10 +265,26 @@ public class PhotoGalleryFragment extends VisibleFragment {
         }
 
         public void bindGalleryItem(GalleryItem galleryItem) {
+
+            mGalleryItem = galleryItem;
+
             Picasso.with(getActivity())
                     .load(galleryItem.getUrl())
                     .placeholder(R.drawable.gray)
                     .into(mItemImageView);
+        }
+
+        /**
+         * On image click, sends out an implicit intent that opens the image's flickr page
+         * using its page URL
+         *
+         * @param v
+         */
+        @Override
+        public void onClick(View v) {
+            Intent intent = PhotoPageActivity.newIntent(getActivity(),
+                    mGalleryItem.getPhotoPageUri());
+            startActivity(intent);
         }
     }
 

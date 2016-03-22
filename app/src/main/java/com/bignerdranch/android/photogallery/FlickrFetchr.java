@@ -182,6 +182,7 @@ public class FlickrFetchr {
             if (photo.getUrl_s() == null) continue;
 
             galleryItem.setId(photo.getId());
+            galleryItem.setOwner(photo.getOwner());
             galleryItem.setCaption(photo.getTitle());
             galleryItem.setUrl(photo.getUrl_s());
 
