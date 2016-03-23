@@ -7,7 +7,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
 /**
- * Superclass for CriminalIntent's activities
+ * Superclass for PhotoGallery's activities
  *
  * Created by Rudolf on 2/10/2016.
  */

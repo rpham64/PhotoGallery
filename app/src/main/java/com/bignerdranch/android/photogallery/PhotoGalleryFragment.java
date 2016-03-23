@@ -39,7 +39,7 @@ public class PhotoGalleryFragment extends VisibleFragment {
     private List<GalleryItem> mItems = new ArrayList<>();
 
     // Last page fetched
-    private int lastPageFetched = 0;
+    private int lastPageFetched = 1;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -184,7 +184,8 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
     private void updateItems() {
         String query = QueryPreferences.getStoredQuery(getActivity());
-        lastPageFetched = 0;
+        lastPageFetched = 1;
+
         new FetchItemsTask(query).execute(lastPageFetched);
     }
 
@@ -324,7 +325,7 @@ public class PhotoGalleryFragment extends VisibleFragment {
         @Override
         protected void onPostExecute(List<GalleryItem> galleryItems) {
 
-            if (lastPageFetched > 0) {
+            if (lastPageFetched > 1) {
                 mItems.addAll(galleryItems);
                 mPhotoRecyclerView.getAdapter().notifyDataSetChanged();
             }
