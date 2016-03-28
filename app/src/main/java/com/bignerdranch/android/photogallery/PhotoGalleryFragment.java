@@ -1,7 +1,7 @@
 package com.bignerdranch.android.photogallery;
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -9,6 +9,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -27,7 +29,7 @@ import java.util.List;
  *
  * Created by Rudolf on 3/12/2016.
  */
-public class PhotoGalleryFragment extends VisibleFragment {
+public class PhotoGalleryFragment extends VisibleFragment implements BasicImageDownloader.OnImageLoaderListener {
 
     // TAG for filtering log messages
     private static final String TAG = "PhotoGalleryFragment";
@@ -40,6 +42,8 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
     // Last page fetched
     private int lastPageFetched = 1;
+
+    private String itemUrl;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -66,6 +70,8 @@ public class PhotoGalleryFragment extends VisibleFragment {
         final GridLayoutManager mLayoutManager = new GridLayoutManager(getActivity(), 3);
 
         mPhotoRecyclerView.setLayoutManager(mLayoutManager);
+
+        registerForContextMenu(mPhotoRecyclerView);
 
         setupAdapter();
 
@@ -157,29 +163,36 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
         switch (item.getItemId()) {
 
-            // Removes query from QueryPreferences
             case R.id.menu_item_clear:
 
-                QueryPreferences.setStoredQuery(getActivity(), null);
-                updateItems();
+                return clearSearchQuery();
 
-                return true;
-
-            // Sets alarm on or off
             case R.id.menu_item_toggle_polling:
 
-                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
-                PollService.setServiceAlarm(getActivity(), lastPageFetched, shouldStartAlarm);
-                getActivity().invalidateOptionsMenu();
-
-                return true;
+                return setPollingOnOrOff();
 
             default:
+
                 return super.onOptionsItemSelected(item);
 
         }
 
 
+    }
+
+    private boolean clearSearchQuery() {
+        QueryPreferences.setStoredQuery(getActivity(), null);
+        updateItems();
+
+        return true;
+    }
+
+    private boolean setPollingOnOrOff() {
+        boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+        PollService.setServiceAlarm(getActivity(), lastPageFetched, shouldStartAlarm);
+        getActivity().invalidateOptionsMenu();
+
+        return true;
     }
 
     private void updateItems() {
@@ -201,6 +214,61 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
     }
 
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+
+        /*AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
+        if (info == null) {
+            info = lastMenuInfo;
+        }
+
+        int position = info.position;
+        String itemUrl = mItems.get(position).getUrl();*/
+        Log.i(TAG, "itemURl: " + itemUrl);
+
+        String toast = "";
+
+        switch (item.getItemId()) {
+
+            case R.id.enter_full_screen_context_item:
+
+                toast = "Enter fullscreen clicked!";
+
+                break;
+
+            case R.id.save_image_context_item:
+
+                toast = "Save Image clicked!";
+
+                break;
+
+            case R.id.share_image_context_item:
+
+                toast = "Share!";
+
+                break;
+
+        }
+        Toast.makeText(getActivity(), toast, Toast.LENGTH_SHORT).show();
+
+        return super.onContextItemSelected(item);
+    }
+
+    @Override
+    public void onError(BasicImageDownloader.ImageError error) {
+
+    }
+
+    @Override
+    public void onProgressChange(int percent) {
+
+    }
+
+    @Override
+    public void onComplete(Bitmap result) {
+
+    }
 
     /**
      * Adapter class that connects RecyclerView layout to PhotoHolder
@@ -230,8 +298,6 @@ public class PhotoGalleryFragment extends VisibleFragment {
             GalleryItem galleryItem = mGalleryItems.get(position);
             lastBoundPosition = position;
 
-//            Log.i(TAG, "Last bound position: " + lastBoundPosition);
-
             photoHolder.bindGalleryItem(galleryItem);
         }
 
@@ -248,7 +314,8 @@ public class PhotoGalleryFragment extends VisibleFragment {
     /**
      * ViewHolder class that binds GalleryItem to an ImageView (ie. adds picture to UI)
      */
-    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener,
+    View.OnCreateContextMenuListener {
 
         private ImageView mItemImageView;
         private GalleryItem mGalleryItem;
@@ -258,11 +325,9 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
             mItemImageView =
                     (ImageView) itemView.findViewById(R.id.fragment_photo_gallery_image_view);
-            itemView.setOnClickListener(this);
-        }
 
-        public void bindDrawable(Drawable drawable) {
-            mItemImageView.setImageDrawable(drawable);
+            itemView.setOnClickListener(this);
+            itemView.setOnCreateContextMenuListener(this);
         }
 
         public void bindGalleryItem(GalleryItem galleryItem) {
@@ -286,6 +351,19 @@ public class PhotoGalleryFragment extends VisibleFragment {
             Intent intent = PhotoPageActivity.newIntent(getActivity(),
                     mGalleryItem.getPhotoPageUri());
             startActivity(intent);
+        }
+
+        @Override
+        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+
+            itemUrl = mGalleryItem.getUrl();
+
+            Log.i(TAG, "itemUrl saved: " + itemUrl);
+
+            menu.setHeaderTitle("Context Menu");
+            menu.add(0, R.id.enter_full_screen_context_item, 0, "Enter fullscreen");
+            menu.add(0, R.id.save_image_context_item, 0, "Save Image");
+            menu.add(0, R.id.share_image_context_item, 0, "Share");
         }
     }
 

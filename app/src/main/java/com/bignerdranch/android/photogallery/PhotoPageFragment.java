@@ -26,7 +26,7 @@ public class PhotoPageFragment extends VisibleFragment {
 
     private static final String ARG_URI = "photo_page_url";
 
-    private Uri mUri;       // Photo URL
+    private Uri mUri;
 
     private WebView mWebView;
     private ProgressBar mProgressBar;
