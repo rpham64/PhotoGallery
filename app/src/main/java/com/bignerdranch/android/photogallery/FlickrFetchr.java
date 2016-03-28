@@ -42,7 +42,7 @@ public class FlickrFetchr {
      * @return
      * @throws IOException
      */
-    public byte[] getUrlBytes(String urlSpec) throws IOException {
+    public static byte[] getUrlBytes(String urlSpec) throws IOException {
 
         // Create URL object from String (like a website link with http)
         URL url = new URL(urlSpec);

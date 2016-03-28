@@ -2,8 +2,10 @@ package com.bignerdranch.android.photogallery;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,6 +23,13 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +38,7 @@ import java.util.List;
  *
  * Created by Rudolf on 3/12/2016.
  */
-public class PhotoGalleryFragment extends VisibleFragment implements BasicImageDownloader.OnImageLoaderListener {
+public class PhotoGalleryFragment extends VisibleFragment {
 
     // TAG for filtering log messages
     private static final String TAG = "PhotoGalleryFragment";
@@ -217,17 +226,14 @@ public class PhotoGalleryFragment extends VisibleFragment implements BasicImageD
     @Override
     public boolean onContextItemSelected(MenuItem item) {
 
-        /*AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-
-        if (info == null) {
-            info = lastMenuInfo;
-        }
-
-        int position = info.position;
-        String itemUrl = mItems.get(position).getUrl();*/
-        Log.i(TAG, "itemURl: " + itemUrl);
-
         String toast = "";
+
+        Log.i(TAG, "itemURL: " + itemUrl);
+
+        Bitmap bitmap = getBitmapFromURL(itemUrl);
+        File sdCardDirectory = Environment.getExternalStorageDirectory();
+        String filename = itemUrl.substring(itemUrl.lastIndexOf('/')+1, itemUrl.length());
+        File image = new File(sdCardDirectory, filename);
 
         switch (item.getItemId()) {
 
@@ -239,7 +245,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements BasicImageD
 
             case R.id.save_image_context_item:
 
-                toast = "Save Image clicked!";
+                saveImageToMemory(bitmap, sdCardDirectory, filename, image);
 
                 break;
 
@@ -250,25 +256,52 @@ public class PhotoGalleryFragment extends VisibleFragment implements BasicImageD
                 break;
 
         }
+
         Toast.makeText(getActivity(), toast, Toast.LENGTH_SHORT).show();
 
         return super.onContextItemSelected(item);
     }
 
-    @Override
-    public void onError(BasicImageDownloader.ImageError error) {
-
+    public static Bitmap getBitmapFromURL(String src) {
+        try {
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            return myBitmap;
+        } catch (IOException e) {
+            // Log exception
+            return null;
+        }
     }
 
-    @Override
-    public void onProgressChange(int percent) {
+    private void saveImageToMemory(Bitmap bitmap, File sdCardDirectory, String filename, File image) {
 
+        FileOutputStream outputStream;
+
+        try {
+
+            outputStream = new FileOutputStream(image);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+
+            outputStream.flush();
+            outputStream.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String message = "Saving image " + filename + " to " + sdCardDirectory.toString();
+
+        Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onComplete(Bitmap result) {
 
-    }
+
 
     /**
      * Adapter class that connects RecyclerView layout to PhotoHolder
@@ -357,8 +390,6 @@ public class PhotoGalleryFragment extends VisibleFragment implements BasicImageD
         public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
 
             itemUrl = mGalleryItem.getUrl();
-
-            Log.i(TAG, "itemUrl saved: " + itemUrl);
 
             menu.setHeaderTitle("Context Menu");
             menu.add(0, R.id.enter_full_screen_context_item, 0, "Enter fullscreen");
