@@ -27,9 +27,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -230,7 +227,16 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
         Log.i(TAG, "itemURL: " + itemUrl);
 
-        Bitmap bitmap = getBitmapFromURL(itemUrl);
+        // Convert Url -> File
+        byte[] byteArray = null;
+
+        try {
+            byteArray = FlickrFetchr.getUrlBytes(itemUrl);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
         File sdCardDirectory = Environment.getExternalStorageDirectory();
         String filename = itemUrl.substring(itemUrl.lastIndexOf('/')+1, itemUrl.length());
         File image = new File(sdCardDirectory, filename);
@@ -260,21 +266,6 @@ public class PhotoGalleryFragment extends VisibleFragment {
         Toast.makeText(getActivity(), toast, Toast.LENGTH_SHORT).show();
 
         return super.onContextItemSelected(item);
-    }
-
-    public static Bitmap getBitmapFromURL(String src) {
-        try {
-            URL url = new URL(src);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setDoInput(true);
-            connection.connect();
-            InputStream input = connection.getInputStream();
-            Bitmap myBitmap = BitmapFactory.decodeStream(input);
-            return myBitmap;
-        } catch (IOException e) {
-            // Log exception
-            return null;
-        }
     }
 
     private void saveImageToMemory(Bitmap bitmap, File sdCardDirectory, String filename, File image) {
