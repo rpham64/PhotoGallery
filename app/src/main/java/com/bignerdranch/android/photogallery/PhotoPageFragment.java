@@ -1,5 +1,8 @@
 package com.bignerdranch.android.photogallery;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -39,6 +43,7 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     private static final String ARG_URI = "photo_page_url";
 
     private static final String METHOD_FULL_SCREEN = "full_screen";
+    private static final String METHOD_COPY_LINK = "copy_link";
     private static final String METHOD_SAVE = "save";
     private static final String METHOD_SHARE = "share";
 
@@ -176,6 +181,7 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     private void createContextMenu(ContextMenu menu) {
         menu.setHeaderTitle("Context Menu");
         menu.add(0, R.id.enter_full_screen_context_item, 0, "Enter fullscreen");
+        menu.add(0, R.id.copy_link_address_context_item, 0, "Copy link address");
         menu.add(0, R.id.save_image_context_item, 0, "Save Image");
         menu.add(0, R.id.share_image_context_item, 0, "Share");
     }
@@ -187,20 +193,22 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
 
             case R.id.enter_full_screen_context_item:
 
-                showFullScreenToast();
+                executeFullScreenTask();
+                break;
 
+            case R.id.copy_link_address_context_item:
+
+                executeCopyLinkTask();
                 break;
 
             case R.id.save_image_context_item:
 
-                showDownloadingToast();
-
-                new RetrieveImageTask(METHOD_SAVE).execute();
-
+                executeSaveImageTask();
                 break;
 
             case R.id.share_image_context_item:
 
+                executeShareImageTask();
                 break;
 
         }
@@ -208,18 +216,46 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         return super.onContextItemSelected(item);
     }
 
-    private void showFullScreenToast() {
+    private void executeFullScreenTask() {
+        new RetrieveImageTask(METHOD_FULL_SCREEN).execute();
+        return;
+    }
 
-        String fullScreenMsg = "Fullscreen mode ON";
+    private void executeCopyLinkTask() {
 
-        Toast.makeText(getActivity(), fullScreenMsg, Toast.LENGTH_SHORT).show();
+        showCopyingLinkToast();
+
+        new RetrieveImageTask(METHOD_COPY_LINK).execute();
+        return;
+    }
+
+    private void showCopyingLinkToast() {
+        String copyingLinkMsg = "Copied link address to clipboard";
+
+        Toast.makeText(getActivity(), copyingLinkMsg, Toast.LENGTH_SHORT).show();
+    }
+
+    private void executeSaveImageTask() {
+
+        showDownloadingToast();
+
+        new RetrieveImageTask(METHOD_SAVE).execute();
+
+        return;
     }
 
     private void showDownloadingToast() {
+
         String downloadingMsg = "Downloading image...";
 
         Toast.makeText(getActivity(), downloadingMsg, Toast.LENGTH_SHORT).show();
     }
+
+    private void executeShareImageTask() {
+        new RetrieveImageTask(METHOD_SHARE).execute();
+        return;
+    }
+
 
     /**
      * Back press moves WebView back through its items in its browsing history
@@ -241,7 +277,7 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         new RetrieveImageTask(null).execute();
     }
 
-    private class RetrieveImageTask extends AsyncTask<String, Void, Void> {
+    private class RetrieveImageTask extends AsyncTask<String, Void, Bitmap> {
 
         private String mMethod;
 
@@ -250,7 +286,7 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         }
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected Bitmap doInBackground(String... params) {
 
             byte[] byteArray = null;
 
@@ -261,10 +297,72 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
             }
 
             Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+
+            return bitmap;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+
+            Uri imageUri = Uri.parse(mImageUrl);
+
+            switch (mMethod) {
+
+                case METHOD_FULL_SCREEN:
+
+                    viewImageInFullScreen(imageUri);
+
+                    break;
+
+                case METHOD_COPY_LINK:
+
+                    copyLink(imageUri);
+
+                    break;
+
+                case METHOD_SAVE:
+
+                    saveImageToExternalMemory(bitmap);
+
+                    break;
+
+                case METHOD_SHARE:
+
+                    shareImage(imageUri);
+
+                    break;
+
+            }
+
+        }
+
+        private void viewImageInFullScreen(Uri imageUri) {
+            Intent intentFullScreen = new Intent();
+            intentFullScreen.setAction(Intent.ACTION_VIEW);
+            intentFullScreen.setDataAndType(imageUri, "image/png");
+            startActivity(intentFullScreen);
+        }
+
+        private void copyLink(Uri imageUri) {
+            ClipboardManager clipboard = (ClipboardManager) getActivity()
+                    .getSystemService(Context.CLIPBOARD_SERVICE);
+
+            ClipData clip = ClipData.newUri(
+                    getContext().getContentResolver(),
+                    "URI",
+                    imageUri);
+
+            clipboard.setPrimaryClip(clip);
+        }
+
+        private void saveImageToExternalMemory(Bitmap bitmap) {
+            // Create image file
             File sdCardDirectory = Environment.getExternalStorageDirectory();
-            String filename = mImageUrl.substring(mImageUrl.lastIndexOf('/') + 1, mImageUrl.length());
+            String filename = mImageUrl
+                    .substring(mImageUrl.lastIndexOf('/') + 1, mImageUrl.length());
             File image = new File(sdCardDirectory, filename);
 
+            // Save image file
             FileOutputStream outputStream;
 
             try {
@@ -279,32 +377,23 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
                 e.printStackTrace();
             }
 
-            return null;
+            String message = "Image saved!";
+
+            Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
         }
 
-        @Override
-        protected void onPostExecute(Void aVoid) {
+        private void shareImage(Uri imageUri) {
+            ShareCompat.IntentBuilder intentBuilder = ShareCompat.IntentBuilder.from(getActivity());
 
-            switch (mMethod) {
+            intentBuilder.setChooserTitle(R.string.intent_share_image)
+                    .setType("image/png")
+                    .addStream(imageUri);
 
-                case METHOD_FULL_SCREEN:
+            Intent intent = Intent.createChooser(
+                    intentBuilder.getIntent(),
+                    getString(R.string.intent_share_image));
 
-                    break;
-
-                case METHOD_SAVE:
-
-                    String message = "Image saved!";
-
-                    Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
-
-                    break;
-
-                case METHOD_SHARE:
-
-                    break;
-
-            }
-
+            startActivity(intent);
         }
     }
 }

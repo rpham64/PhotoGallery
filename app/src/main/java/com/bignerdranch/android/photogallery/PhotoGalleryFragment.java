@@ -1,17 +1,13 @@
 package com.bignerdranch.android.photogallery;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,14 +15,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,8 +39,6 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
     // Last page fetched
     private int lastPageFetched = 1;
-
-    private String itemUrl;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -77,10 +66,14 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
         mPhotoRecyclerView.setLayoutManager(mLayoutManager);
 
-        registerForContextMenu(mPhotoRecyclerView);
-
         setupAdapter();
 
+        setEndlessPageScrolling(mLayoutManager);
+
+        return view;
+    }
+
+    private void setEndlessPageScrolling(final GridLayoutManager mLayoutManager) {
         /** Endless Page Scrolling */
         mPhotoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
@@ -107,8 +100,6 @@ public class PhotoGalleryFragment extends VisibleFragment {
                 super.onScrolled(recyclerView, dx, dy);
             }
         });
-
-        return view;
     }
 
     @Override
@@ -120,6 +111,18 @@ public class PhotoGalleryFragment extends VisibleFragment {
         final MenuItem searchItem = menu.findItem(R.id.menu_item_search);
         final SearchView searchView = (SearchView) searchItem.getActionView();
 
+        setSearchViewListeners(searchView);
+
+        togglePollingButtonTitle(menu);
+
+    }
+
+    private void setSearchViewListeners(final SearchView searchView) {
+        setQueryTextListener(searchView);
+        setIconClickListener(searchView);
+    }
+
+    private void setQueryTextListener(final SearchView searchView) {
         /** SearchView Query Text Listener */
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -143,7 +146,9 @@ public class PhotoGalleryFragment extends VisibleFragment {
                 return false;
             }
         });
+    }
 
+    private void setIconClickListener(final SearchView searchView) {
         /** SearchView Icon Click Listener */
         searchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
@@ -152,7 +157,9 @@ public class PhotoGalleryFragment extends VisibleFragment {
                 searchView.setQuery(query, false);
             }
         });
+    }
 
+    private void togglePollingButtonTitle(Menu menu) {
         /** Toggle Title for Polling Menu Button */
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
 
@@ -161,7 +168,6 @@ public class PhotoGalleryFragment extends VisibleFragment {
         } else {
             toggleItem.setTitle(R.string.start_polling);
         }
-
     }
 
     @Override
@@ -182,7 +188,6 @@ public class PhotoGalleryFragment extends VisibleFragment {
                 return super.onOptionsItemSelected(item);
 
         }
-
 
     }
 
@@ -219,80 +224,6 @@ public class PhotoGalleryFragment extends VisibleFragment {
         }
 
     }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-
-        String toast = "";
-
-        Log.i(TAG, "itemURL: " + itemUrl);
-
-        // Convert Url -> File
-        byte[] byteArray = null;
-
-        try {
-            byteArray = FlickrFetchr.getUrlBytes(itemUrl);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-        File sdCardDirectory = Environment.getExternalStorageDirectory();
-        String filename = itemUrl.substring(itemUrl.lastIndexOf('/')+1, itemUrl.length());
-        File image = new File(sdCardDirectory, filename);
-
-        switch (item.getItemId()) {
-
-            case R.id.enter_full_screen_context_item:
-
-                toast = "Enter fullscreen clicked!";
-
-                break;
-
-            case R.id.save_image_context_item:
-
-                saveImageToMemory(bitmap, sdCardDirectory, filename, image);
-
-                break;
-
-            case R.id.share_image_context_item:
-
-                toast = "Share!";
-
-                break;
-
-        }
-
-        Toast.makeText(getActivity(), toast, Toast.LENGTH_SHORT).show();
-
-        return super.onContextItemSelected(item);
-    }
-
-    private void saveImageToMemory(Bitmap bitmap, File sdCardDirectory, String filename, File image) {
-
-        FileOutputStream outputStream;
-
-        try {
-
-            outputStream = new FileOutputStream(image);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-
-            outputStream.flush();
-            outputStream.close();
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        String message = "Saving image " + filename + " to " + sdCardDirectory.toString();
-
-        Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
-    }
-
-
-
 
     /**
      * Adapter class that connects RecyclerView layout to PhotoHolder
@@ -338,8 +269,7 @@ public class PhotoGalleryFragment extends VisibleFragment {
     /**
      * ViewHolder class that binds GalleryItem to an ImageView (ie. adds picture to UI)
      */
-    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener,
-    View.OnCreateContextMenuListener {
+    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private ImageView mItemImageView;
         private GalleryItem mGalleryItem;
@@ -351,7 +281,6 @@ public class PhotoGalleryFragment extends VisibleFragment {
                     (ImageView) itemView.findViewById(R.id.fragment_photo_gallery_image_view);
 
             itemView.setOnClickListener(this);
-            itemView.setOnCreateContextMenuListener(this);
         }
 
         public void bindGalleryItem(GalleryItem galleryItem) {
@@ -375,17 +304,6 @@ public class PhotoGalleryFragment extends VisibleFragment {
             Intent intent = PhotoPageActivity.newIntent(getActivity(),
                     mGalleryItem.getPhotoPageUri());
             startActivity(intent);
-        }
-
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-
-            itemUrl = mGalleryItem.getUrl();
-
-            menu.setHeaderTitle("Context Menu");
-            menu.add(0, R.id.enter_full_screen_context_item, 0, "Enter fullscreen");
-            menu.add(0, R.id.save_image_context_item, 0, "Save Image");
-            menu.add(0, R.id.share_image_context_item, 0, "Share");
         }
     }
 

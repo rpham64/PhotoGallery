@@ -3,20 +3,18 @@
 
     <item
         android:id="@+id/enter_full_screen_context_item"
-        android:title="@string/enter_full_screen_context_item"
-        android:icon="@android:drawable/ic_menu_gallery"
-        />
+        android:title="@string/enter_full_screen_context_item"/>
+
+    <item
+        android:id="@+id/copy_link_address_context_item"
+        android:title="Copy link address"/>
 
     <item
         android:id="@+id/save_image_context_item"
-        android:title="@string/save_image_context_item"
-        android:icon="@android:drawable/ic_menu_save"
-        />
+        android:title="@string/save_image_context_item"/>
 
     <item
         android:id="@+id/share_image_context_item"
-        android:title="@string/share_image_context_item"
-        android:icon="@android:drawable/ic_menu_share"
-        />
+        android:title="@string/share_image_context_item"/>
 
 </menu>
