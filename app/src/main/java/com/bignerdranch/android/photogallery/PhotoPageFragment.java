@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NavUtils;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ShareActionProvider;
@@ -55,8 +56,8 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     private String mImageUrl;
 
     private WebView mWebView;
-    private ShareActionProvider mShareActionProvider;
     private ProgressBar mProgressBar;
+    private ShareActionProvider mShareActionProvider;
 
     public static PhotoPageFragment newInstance(Uri uri) {
 
@@ -73,6 +74,10 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
+        retrievePageUri();
+    }
+
+    private void retrievePageUri() {
         mUri = getArguments().getParcelable(ARG_URI);
     }
 
@@ -193,6 +198,24 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+
+            // Respond to action bar's Up/Home button
+            case android.R.id.home:
+                return navigateUpToHomeActivity();
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private boolean navigateUpToHomeActivity() {
+        NavUtils.navigateUpFromSameTask(getActivity());
+        return true;
+    }
+
+    @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
 
@@ -213,7 +236,6 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     }
 
     private void createContextMenu(ContextMenu menu) {
-        menu.setHeaderTitle("Context Menu");
         menu.add(0, R.id.enter_full_screen_context_item, 0, "Enter fullscreen");
         menu.add(0, R.id.copy_link_address_context_item, 0, "Copy link address");
         menu.add(0, R.id.save_image_context_item, 0, "Save Image");
@@ -252,6 +274,11 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         return super.onContextItemSelected(item);
     }
 
+    /**
+     * Unable to access flickr image due to owner's permissions
+     *
+     * @return
+     */
     private boolean isNotAllowed() {
         if (mImageUrl.endsWith("spaceball.gif")) {
             showPermissionDeniedToast();

@@ -37,4 +37,6 @@ public class PhotoPageActivity extends SingleFragmentActivity {
 
         super.onBackPressed();
     }
+
+
 }
