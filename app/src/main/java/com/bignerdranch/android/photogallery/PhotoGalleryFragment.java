@@ -112,9 +112,7 @@ public class PhotoGalleryFragment extends VisibleFragment {
         final SearchView searchView = (SearchView) searchItem.getActionView();
 
         setSearchViewListeners(searchView);
-
         togglePollingButtonTitle(menu);
-
     }
 
     private void setSearchViewListeners(final SearchView searchView) {
@@ -123,7 +121,6 @@ public class PhotoGalleryFragment extends VisibleFragment {
     }
 
     private void setQueryTextListener(final SearchView searchView) {
-        /** SearchView Query Text Listener */
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
@@ -289,7 +286,7 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
             Picasso.with(getActivity())
                     .load(galleryItem.getUrl())
-                    .placeholder(R.drawable.gray)
+                    .placeholder(android.R.color.white)
                     .into(mItemImageView);
         }
 

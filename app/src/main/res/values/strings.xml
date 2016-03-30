@@ -11,5 +11,6 @@
     <string name="enter_full_screen_context_item">Enter Fullscreen</string>
     <string name="share_image_context_item">Share</string>
     <string name="intent_share_image">Send image via</string>
+    <string name="menu_item_share">Share Url</string>
 
 </resources>

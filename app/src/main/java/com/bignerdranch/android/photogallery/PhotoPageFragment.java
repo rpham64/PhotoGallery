@@ -10,12 +10,16 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ShareCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ShareActionProvider;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,6 +55,7 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     private String mImageUrl;
 
     private WebView mWebView;
+    private ShareActionProvider mShareActionProvider;
     private ProgressBar mProgressBar;
 
     public static PhotoPageFragment newInstance(Uri uri) {
@@ -66,6 +71,7 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
 
         mUri = getArguments().getParcelable(ARG_URI);
     }
@@ -159,6 +165,34 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.menu_photo_web_view, menu);
+
+        MenuItem item = menu.findItem(R.id.menu_item_share);
+
+        setShareIntent(item);
+    }
+
+    private void setShareIntent(MenuItem item) {
+        // Fetch and store ShareActionProvider
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+
+        if (mShareActionProvider != null) {
+            mShareActionProvider.setShareIntent(createShareIntent());
+        }
+    }
+
+    @NonNull
+    private Intent createShareIntent() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, mWebView.getUrl());
+        return shareIntent;
+    }
+
+    @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
 
@@ -189,6 +223,8 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     @Override
     public boolean onContextItemSelected(MenuItem item) {
 
+        if (isNotAllowed()) return false;
+
         switch (item.getItemId()) {
 
             case R.id.enter_full_screen_context_item:
@@ -214,6 +250,23 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         }
 
         return super.onContextItemSelected(item);
+    }
+
+    private boolean isNotAllowed() {
+        if (mImageUrl.endsWith("spaceball.gif")) {
+            showPermissionDeniedToast();
+            return true;
+        }
+        return false;
+    }
+
+    private void showPermissionDeniedToast() {
+        String permissionDeniedMsg = "Permission denied by the owner. " +
+                "Cannot view this image in fullscreen.";
+
+        Toast.makeText(getActivity(), permissionDeniedMsg, Toast.LENGTH_SHORT).show();
+
+        return;
     }
 
     private void executeFullScreenTask() {
@@ -311,25 +364,21 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
                 case METHOD_FULL_SCREEN:
 
                     viewImageInFullScreen(imageUri);
-
                     break;
 
                 case METHOD_COPY_LINK:
 
                     copyLink(imageUri);
-
                     break;
 
                 case METHOD_SAVE:
 
                     saveImageToExternalMemory(bitmap);
-
                     break;
 
                 case METHOD_SHARE:
 
-                    shareImage(imageUri);
-
+                    shareImage(bitmap);
                     break;
 
             }
@@ -337,6 +386,7 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         }
 
         private void viewImageInFullScreen(Uri imageUri) {
+
             Intent intentFullScreen = new Intent();
             intentFullScreen.setAction(Intent.ACTION_VIEW);
             intentFullScreen.setDataAndType(imageUri, "image/png");
@@ -382,15 +432,32 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
             Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
         }
 
-        private void shareImage(Uri imageUri) {
-            ShareCompat.IntentBuilder intentBuilder = ShareCompat.IntentBuilder.from(getActivity());
+        private void shareImage(Bitmap bitmap) {
+            /*ShareCompat.IntentBuilder intentBuilder = ShareCompat.IntentBuilder.from(getActivity());
 
             intentBuilder.setChooserTitle(R.string.intent_share_image)
-                    .setType("image/png")
+                    .setType("image*//*")
                     .addStream(imageUri);
 
             Intent intent = Intent.createChooser(
                     intentBuilder.getIntent(),
+                    getString(R.string.intent_share_image));
+
+            startActivity(intent);*/
+
+            // Create image file
+            File sdCardDirectory = Environment.getExternalStorageDirectory();
+            String filename = mImageUrl
+                    .substring(mImageUrl.lastIndexOf('/') + 1, mImageUrl.length());
+            File image = new File(sdCardDirectory, filename);
+
+
+            Intent shareIntent = new Intent();
+            shareIntent.setAction(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(image));
+            shareIntent.setType("image/jpeg");
+            Intent intent = Intent.createChooser(
+                    shareIntent,
                     getString(R.string.intent_share_image));
 
             startActivity(intent);

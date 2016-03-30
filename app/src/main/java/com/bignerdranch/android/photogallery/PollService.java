@@ -27,7 +27,7 @@ public class PollService extends IntentService {
     private static final String EXTRA_PAGE =
             "com.bignerdranch.android.photogallery.lastpagedfetched";
 
-    private static final long POLL_INTERVAL = 1000 * 60;    // 60 seconds
+    private static final long POLL_INTERVAL = 5000 * 60;    // 5 minutes
 
     public static final String ACTION_SHOW_NOTIFICATION =
             "com.bignerdranch.android.photogallery.SHOW_NOTIFICATION";
