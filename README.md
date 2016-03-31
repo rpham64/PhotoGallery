@@ -3,8 +3,7 @@
 Photo Gallery is a native Android application that fetches and displays the most recently uploaded pictures to flickr. 
 Built using the flickr API, the goal of Photo Gallery is to make image browsing on flickr simpler and faster by using a grid view layout.
 
-![Demo](https://i.imgur.com/U7ysqYv.webm)
-GIF HERE
+![Demo](http://i.imgur.com/Jgq2dzO.gif)
 
 # Installation
 
