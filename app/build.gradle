@@ -5,15 +5,28 @@ android {
     buildToolsVersion "23.0.2"
 
     defaultConfig {
-        applicationId "com.bignerdranch.android.photogallery"
+        applicationId "com.rpham64.android.photogallery"
         minSdkVersion 16
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
     }
-    buildTypes {
+
+    signingConfigs {
         release {
-            minifyEnabled false
+            storeFile file("android.jks")
+            storePassword KEYSTORE_PASSWORD
+            keyAlias "MyAndroidKey"
+            keyPassword KEY_PASSWORD
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable false
+        }
+        release {
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -24,7 +37,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile 'com.android.support:design:23.2.1'
-    compile 'com.android.support:recyclerview-v7:24.0.0-alpha1'
+    compile 'com.android.support:recyclerview-v7:23.2.1'
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.github.chrisbanes.photoview:library:1.2.4'

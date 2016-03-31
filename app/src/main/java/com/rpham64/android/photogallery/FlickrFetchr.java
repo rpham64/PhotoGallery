@@ -1,4 +1,4 @@
-package com.bignerdranch.android.photogallery;
+package com.rpham64.android.photogallery;
 
 import android.net.Uri;
 import android.util.Log;

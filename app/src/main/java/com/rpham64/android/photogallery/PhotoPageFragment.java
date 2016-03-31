@@ -1,4 +1,4 @@
-package com.bignerdranch.android.photogallery;
+package com.rpham64.android.photogallery;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -289,7 +289,7 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
 
     private void showPermissionDeniedToast() {
         String permissionDeniedMsg = "Permission denied by the owner. " +
-                "Cannot view this image in fullscreen.";
+                "Unable to interact with this image.";
 
         Toast.makeText(getActivity(), permissionDeniedMsg, Toast.LENGTH_SHORT).show();
 

@@ -1,4 +1,4 @@
-package com.bignerdranch.android.photogallery;
+package com.rpham64.android.photogallery;
 
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
