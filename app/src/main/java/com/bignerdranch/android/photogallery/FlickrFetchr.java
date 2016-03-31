@@ -117,7 +117,8 @@ public class FlickrFetchr {
 
         if (method.equals(METHOD_SEARCH)) {
             Uri.Builder uriBuilder = url.buildUpon()
-                    .appendQueryParameter("text", query);
+                    .appendQueryParameter("text", query)
+                    .appendQueryParameter("sort", "relevance");
 
             return uriBuilder.build().toString();
         }
