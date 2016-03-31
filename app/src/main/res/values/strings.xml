@@ -12,5 +12,6 @@
     <string name="share_image_context_item">Share</string>
     <string name="intent_share_image">Send image via</string>
     <string name="menu_item_share">Share Url</string>
+    <string name="refresh">Refresh</string>
 
 </resources>

@@ -172,6 +172,10 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
         switch (item.getItemId()) {
 
+            case R.id.menu_item_refresh:
+
+                refresh();
+
             case R.id.menu_item_clear:
 
                 return clearSearchQuery();
@@ -186,6 +190,10 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
         }
 
+    }
+
+    private void refresh() {
+        updateItems();
     }
 
     private boolean clearSearchQuery() {
