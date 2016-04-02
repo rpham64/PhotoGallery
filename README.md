@@ -27,6 +27,18 @@ Built using the flickr API, the goal of Photo Gallery is to make image browsing 
 
 5. Click **Next -> Finish**.
 
+# Technical Concepts
+
+  * MVC Design (RecyclerView, ViewHolder, Adapter)
+  * Using an API (Flickr)
+  * Parsing JSON (Gson)
+  * Loopers, Handlers, Threads (Main & Background)
+  * Asynchronous Tasks (AsyncTask)
+  * Shared Preferences
+  * Services (AlarmManager, PendingIntent)
+  * Notifications
+  * Regular Intents vs. Broadcast Intents & Receivers
+
 # Contributors
 
 ### API
@@ -41,3 +53,8 @@ Built using the flickr API, the goal of Photo Gallery is to make image browsing 
 
   * [Gson](https://github.com/google/gson)
   * [Picasso](https://github.com/square/picasso)
+
+# Contact Me!
+
+  * LinkedIn: https://www.linkedin.com/in/rudolfpham
+  * E-mail: rpham64@berkeley.edu
