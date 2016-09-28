@@ -1,4 +1,4 @@
-package com.rpham64.android.photogallery;
+package com.rpham64.android.photogallery.utils;
 
 import android.content.Context;
 import android.preference.PreferenceManager;

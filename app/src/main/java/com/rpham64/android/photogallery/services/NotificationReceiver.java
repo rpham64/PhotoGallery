@@ -1,4 +1,4 @@
-package com.rpham64.android.photogallery;
+package com.rpham64.android.photogallery.services;
 
 import android.app.Activity;
 import android.app.Notification;

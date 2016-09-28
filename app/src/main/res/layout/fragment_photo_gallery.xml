@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.RecyclerView
+<com.marshalchen.ultimaterecyclerview.UltimateRecyclerView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/fragment_photo_gallery_recycler_view"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/recycler_view_photo_gallery_fragment"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"/>
+    android:layout_height="match_parent"
+    app:recyclerviewEmptyView="@layout/v_empty"
+    />

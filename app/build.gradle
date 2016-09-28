@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'android-apt'
+apply plugin: 'me.tatarka.retrolambda'
 
 android {
     compileSdkVersion 23
@@ -15,9 +17,9 @@ android {
     signingConfigs {
         release {
             storeFile file("android.jks")
-            storePassword KEYSTORE_PASSWORD
+            storePassword 'trekon123'
             keyAlias "MyAndroidKey"
-            keyPassword KEY_PASSWORD
+            keyPassword 'trekon123'
         }
     }
 
@@ -26,11 +28,45 @@ android {
             debuggable true
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    packagingOptions {
+        exclude 'META-INF/pom.xml'
+        exclude 'META-INF/rxjava.properties'
+    }
 }
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
+        classpath 'me.tatarka:gradle-retrolambda:3.3.0'
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+//retrolambda {
+//    jdk System.getenv("JAVA8_HOME")
+//    oldJdk System.getenv("JAVA7_HOME")
+//    javaVersion JavaVersion.VERSION_1_7
+//    jvmArgs '-arg1', '-arg2'
+//    defaultMethods false
+//    incremental true
+//}
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
@@ -38,7 +74,31 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile 'com.android.support:design:23.2.1'
     compile 'com.android.support:recyclerview-v7:23.2.1'
+
+    // Debugging
+    compile 'com.facebook.stetho:stetho:1.4.1'
+    compile 'com.facebook.stetho:stetho-okhttp3:1.4.1'
+    compile 'com.facebook.stetho:stetho-okhttp:1.4.1'
+    compile 'com.facebook.stetho:stetho-urlconnection:1.4.1'
+    compile 'com.orhanobut:logger:1.15'
+
+    // Networking
+    compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+    compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
+    compile 'com.squareup.okhttp3:okhttp:3.4.1'
     compile 'com.google.code.gson:gson:2.6.2'
+    compile 'com.path:android-priority-jobqueue:1.1.2'
+    compile 'io.reactivex.rxjava2:rxjava:2.0.0-RC3'
+    compile 'io.reactivex:rxandroid:1.2.1'
+
+    // Testing
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.1'
+
+    // UI
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.github.chrisbanes.photoview:library:1.2.4'
+    compile 'com.marshalchen.ultimaterecyclerview:library:0.7.0'
+    compile 'com.jakewharton:butterknife:8.4.0'
+    apt 'com.jakewharton:butterknife-compiler:8.4.0'
 }

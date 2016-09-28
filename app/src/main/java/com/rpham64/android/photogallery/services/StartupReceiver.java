@@ -1,9 +1,11 @@
-package com.rpham64.android.photogallery;
+package com.rpham64.android.photogallery.services;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+
+import com.rpham64.android.photogallery.utils.QueryPreferences;
 
 /**
  * Standalone Broadcast Receiver
