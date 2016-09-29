@@ -7,17 +7,29 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.SystemClock;
+import android.support.v7.app.NotificationCompat;
+import android.util.Log;
 
+import com.rpham64.android.photogallery.R;
+import com.rpham64.android.photogallery.models.Photo;
+import com.rpham64.android.photogallery.ui.gallery.PhotoGalleryActivity;
+import com.rpham64.android.photogallery.ui.gallery.PhotoGalleryPresenter;
+import com.rpham64.android.photogallery.utils.PagedResult;
 import com.rpham64.android.photogallery.utils.QueryPreferences;
+
+import java.util.List;
+
+import rx.Observable;
 
 /**
  * Polls for search results in background
  *
  * Created by Rudolf on 3/19/2016.
  */
-public class PollService extends IntentService {
+public class PollService extends IntentService implements PhotoGalleryPresenter.View {
 
     private static final String TAG = "PollService";
 
@@ -35,6 +47,9 @@ public class PollService extends IntentService {
     public static final String REQUEST_CODE = "REQUEST_CODE";
     public static final String NOTIFICATION = "NOTIFICATION";
 
+    private PhotoGalleryPresenter presenter;
+
+    private List<Photo> items;
 
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
@@ -104,53 +119,50 @@ public class PollService extends IntentService {
         // Check: Network available and connected
         if (!isNetworkAvailableAndConnected()) return;
 
-//        // 1) Pull out current query and last result ID from QueryPreferences
-//        String query = QueryPreferences.getStoredQuery(this);
-//        String lastResultId = QueryPreferences.getLastResultId(this);
-//        int lastPageFetched = intent.getIntExtra(EXTRA_PAGE, 1);
-//        List<GalleryItem> items;
-//
-//        // 2) Fetch latest result set with FlickrFetchr
-//        if (query == null) {
-//            items = new FlickrFetchr().fetchRecentPhotos(lastPageFetched);
-//        } else {
-//            items = new FlickrFetchr().searchPhotos(query, lastPageFetched);
-//        }
-//
-//        // 3) If there are results, grab the first one
-//        if (items.size() == 0) return;
-//
-//        String resultId = items.get(0).getId();
-//
-//        // 4) Check: search results are old or new
-//        if (resultId.equals(lastResultId)) {
-//
-//            Log.i(TAG, "Got an old result: " + resultId);
-//
-//        } else {
-//
-//            Log.i(TAG, "Got a new result: " + resultId);
-//
-//            // Add a Notification
-//            Resources resources = getResources();
-//            Intent i = PhotoGalleryActivity.newIntent(this);
-//            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, i, 0);
-//
-//            Notification notification = new NotificationCompat.Builder(this)
-//                    .setTicker(resources.getString(R.string.new_pictures_title))
-//                    .setSmallIcon(android.R.drawable.ic_menu_report_image)
-//                    .setContentTitle(resources.getString(R.string.new_pictures_title))
-//                    .setContentText(resources.getString(R.string.new_pictures_text))
-//                    .setContentIntent(pendingIntent)
-//                    .setAutoCancel(true)
-//                    .build();
-//
-//            // Display Notification
-//            showBackgroundNotification(0, notification);
-//        }
-//
-//        // 5) Store first result back into QueryPreferences
-//        QueryPreferences.setLastResultId(this, resultId);
+        // 1) Pull out current query and last result ID from QueryPreferences
+
+        String query = QueryPreferences.getStoredQuery(this);
+        String lastResultId = QueryPreferences.getLastResultId(this);
+        int lastPageFetched = intent.getIntExtra(EXTRA_PAGE, 1);
+
+        // 2) Fetch results
+        presenter = new PhotoGalleryPresenter();
+        presenter.getPage(Observable.just(lastPageFetched), query);
+
+        // 3) If there are results, grab the first one
+        if (items.size() == 0) return;
+
+        String resultId = items.get(0).id;
+
+        // 4) Check: search results are old or new
+        if (resultId.equals(lastResultId)) {
+
+            Log.i(TAG, "Got an old result: " + resultId);
+
+        } else {
+
+            Log.i(TAG, "Got a new result: " + resultId);
+
+            // Add a Notification
+            Resources resources = getResources();
+            Intent i = PhotoGalleryActivity.newIntent(this);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, i, 0);
+
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setTicker(resources.getString(R.string.new_pictures_title))
+                    .setSmallIcon(android.R.drawable.ic_menu_report_image)
+                    .setContentTitle(resources.getString(R.string.new_pictures_title))
+                    .setContentText(resources.getString(R.string.new_pictures_text))
+                    .setContentIntent(pendingIntent)
+                    .setAutoCancel(true)
+                    .build();
+
+            // Display Notification
+            showBackgroundNotification(0, notification);
+        }
+
+        // 5) Store first result back into QueryPreferences
+        QueryPreferences.setLastResultId(this, resultId);
 
     }
 
@@ -189,4 +201,23 @@ public class PollService extends IntentService {
         return isNetworkConnected;
     }
 
+    @Override
+    public void showError() {
+
+    }
+
+    @Override
+    public void showPictures(List<Photo> photos, PagedResult pagedResult) {
+        this.items = photos;
+    }
+
+    @Override
+    public void refresh() {
+
+    }
+
+    @Override
+    public void updateItems() {
+
+    }
 }

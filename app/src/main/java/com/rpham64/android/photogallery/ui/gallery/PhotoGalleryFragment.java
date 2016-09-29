@@ -2,6 +2,7 @@ package com.rpham64.android.photogallery.ui.gallery;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
@@ -26,7 +27,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Observable;
-import rx.subjects.Subject;
 
 /**
  * Main Fragment hosted by PhotoGalleryActivity
@@ -35,19 +35,15 @@ import rx.subjects.Subject;
  */
 public class PhotoGalleryFragment extends VisibleFragment implements PhotoGalleryPresenter.View {
 
-    private static final String TAG = PhotoGalleryFragment.class.getName();
+    private static final String TAG = PhotoGalleryPresenter.class.getName();
 
     @BindView(R.id.recycler_view_photo_gallery_fragment) UltimateRecyclerView recyclerView;
 
     private PhotoAdapter mAdapter;
 
     private PhotoGalleryPresenter mPresenter;
-    private Subject mSubject;
-    private Observable<Integer> mObservable;
 
     private String mQuery;
-    private List<Photo> mPhotos;
-
     private int currentPage = 1;
 
     public static PhotoGalleryFragment newInstance() {
@@ -61,11 +57,8 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
         setHasOptionsMenu(true);            // Include toolbar
 
         mQuery = QueryPreferences.getStoredQuery(getActivity());
-        mPresenter = new PhotoGalleryPresenter(mQuery);
-
-//        mSubject = PublishSubject.create();
-        mObservable = Observable.just(currentPage);
-        Log.i(PhotoGalleryPresenter.class.getName(), "This emits current page: " + (currentPage));
+        mPresenter = new PhotoGalleryPresenter();
+        mPresenter.getPage(Observable.just(currentPage), mQuery);
     }
 
     @Nullable
@@ -80,6 +73,13 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
         // Setup GridLayoutManager as RecyclerView's layout manager
         final GridLayoutManager mLayoutManager = new GridLayoutManager(getActivity(), 3);
         recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setDefaultOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refresh();
+            }
+        });
+        recyclerView.reenableLoadmore();
         recyclerView.setOnLoadMoreListener(new UltimateRecyclerView.OnLoadMoreListener() {
             @Override
             public void loadMore(int itemsCount, int maxLastVisiblePosition) {
@@ -89,8 +89,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
 
                 if (maxLastVisiblePosition >= itemsCount - 3) {
                     Log.i(TAG, "Loading more");
-//                    mSubject.onNext(currentPage + 1);
-                    mObservable.just(currentPage + 1);
+                    mPresenter.getPage(Observable.just(currentPage + 1), mQuery);
                 }
             }
         });
@@ -120,7 +119,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
                 searchView.setQuery("", false);
                 searchView.setIconified(true);      // Collapses SearchView widget
 
-                // TODO: Update here
+                refresh();
 
                 return true;
             }
@@ -156,7 +155,6 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
     public void onResume() {
         super.onResume();
         mPresenter.onResume();
-//        mSubject.onNext(currentPage);
     }
 
     @Override
@@ -177,13 +175,13 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
         switch (item.getItemId()) {
 
             case R.id.menu_item_refresh:
-                Toast.makeText(getContext(), "Refresh COMING SOON", Toast.LENGTH_SHORT).show();
+                refresh();
                 return true;
 
             case R.id.menu_item_clear:
 
                 QueryPreferences.setStoredQuery(getActivity(), null);
-                Toast.makeText(getContext(), "Update data set soon!", Toast.LENGTH_SHORT).show();
+                updateItems();
 
                 return true;
 
@@ -209,11 +207,9 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
 
     @Override
     public void showPictures(List<Photo> photos, PagedResult pagedResult) {
-        this.mPhotos = photos;
-        Log.i(PhotoGalleryPresenter.class.getName(), "Photos: " + photos);
 
-        if (isAdded()) {
-            mAdapter = new PhotoAdapter(getContext(), mPhotos);
+        if (isAdded() && mAdapter == null) {
+            mAdapter = new PhotoAdapter(getContext(), photos);
             recyclerView.setAdapter(mAdapter);
         }
 
@@ -224,11 +220,19 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
         }
 
         currentPage = pagedResult.page;
-        Log.i(PhotoGalleryPresenter.class.getName(), "Current Page: " + currentPage);
+
+        Toast.makeText(getContext(), "Page " + currentPage, Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public Observable<Integer> getPagedObservable() {
-        return mObservable.asObservable();
+    public void refresh() {
+        currentPage = 1;
+        updateItems();
+    }
+
+    @Override
+    public void updateItems() {
+        mQuery = QueryPreferences.getStoredQuery(getActivity());
+        mPresenter.getPage(Observable.just(currentPage), mQuery);
     }
 }

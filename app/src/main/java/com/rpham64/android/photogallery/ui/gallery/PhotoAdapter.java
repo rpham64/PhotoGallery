@@ -31,6 +31,7 @@ public class PhotoAdapter extends UltimateViewAdapter<PhotoHolder> {
     private List<Photo> mPhotos;
 
     public PhotoAdapter(Context context, List<Photo> photos) {
+        setHasStableIds(true);
         this.mContext = context;
         this.mPhotos = photos;
     }
@@ -83,6 +84,11 @@ public class PhotoAdapter extends UltimateViewAdapter<PhotoHolder> {
         return 0;
     }
 
+    @Override
+    public long getItemId(int position) {
+        return mPhotos.get(position).hashCode();
+    }
+
     public void setPhotos(List<Photo> photos) {
         this.mPhotos = photos;
         notifyDataSetChanged();
@@ -94,36 +100,38 @@ public class PhotoAdapter extends UltimateViewAdapter<PhotoHolder> {
     }
 }
 
-    /**
-     * ViewHolder class that binds GalleryItem to an ImageView (ie. adds picture to UI)
-     */
-    class PhotoHolder extends UltimateRecyclerviewViewHolder {
+/**
+ * ViewHolder class that binds GalleryItem to an ImageView (ie. adds picture to UI)
+ */
+class PhotoHolder extends UltimateRecyclerviewViewHolder {
 
-        @BindView(R.id.fragment_photo_gallery_image_view) ImageView imgPhoto;
+    @BindView(R.id.fragment_photo_gallery_image_view)
+    ImageView imgPhoto;
 
-        private Context mContext;
-        private Photo mPhoto;
+    private Context mContext;
+    private Photo mPhoto;
 
-        public PhotoHolder(Context context, View itemView) {
-            super(itemView);
-            ButterKnife.bind(this, itemView);
+    public PhotoHolder(Context context, View itemView) {
+        super(itemView);
+        ButterKnife.bind(this, itemView);
 
-            this.mContext = context;
-        }
+        this.mContext = context;
+    }
 
-        public void bindPhoto(Photo photo) {
+    public void bindPhoto(Photo photo) {
 
-            this.mPhoto = photo;
+        this.mPhoto = photo;
 
-            Picasso.with(mContext)
-                    .load(photo.url)
-                    .placeholder(android.R.color.white)
-                    .into(imgPhoto);
-        }
+        Picasso.with(mContext)
+                .load(photo.url)
+                .placeholder(android.R.color.white)
+                .into(imgPhoto);
+    }
 
-        @OnClick(R.id.fragment_photo_gallery_image_view)
-        public void onImageViewClicked() {
-            Intent intent = PhotoPageActivity.newIntent(mContext, mPhoto.getPhotoPageUri());
-            mContext.startActivity(intent);
-        }
+    @OnClick(R.id.fragment_photo_gallery_image_view)
+    public void onImageViewClicked() {
+        Intent intent = PhotoPageActivity.newIntent(mContext, mPhoto.getPhotoPageUri());
+        mContext.startActivity(intent);
+    }
+
 }

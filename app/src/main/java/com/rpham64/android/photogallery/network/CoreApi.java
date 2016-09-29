@@ -12,21 +12,15 @@ import rx.Observable;
 
 public interface CoreApi {
 
-    @GET("services/rest/?")
+    @GET("services/rest/?format=json&nojsoncallback=1&extras=url_s")
     Observable<FlickrResponse> getRecentPhotosRx(@Query("page") int page,
                                                  @Query("method") String method,
-                                                 @Query("api_key") String key,
-                                                 @Query("format") String format,
-                                                 @Query("nojsoncallback") int callback,
-                                                 @Query("extras") String extra);
+                                                 @Query("api_key") String key);
 
-    @GET("services/rest/?")
+    @GET("services/rest/?format=json&nojsoncallback=1&extras=url_s")
     Observable<FlickrResponse> getPhotosBySearchRx(@Query("page") int page,
                                                    @Query("method") String method,
                                                    @Query("api_key") String key,
-                                                   @Query("format") String format,
-                                                   @Query("nojsoncallback") int callback,
-                                                   @Query("extras") String extra,
                                                    @Query("text") String query,
                                                    @Query("sort") String order);
 }

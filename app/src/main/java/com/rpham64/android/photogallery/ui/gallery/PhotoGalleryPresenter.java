@@ -27,31 +27,16 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
     private static final String METHOD_FETCH_RECENTS = "flickr.photos.getRecent";
     private static final String METHOD_SEARCH = "flickr.photos.search";
 
-    private static final String FORMAT = "json";
-    private static final int NO_JSON_CALLBACK = 1;
-    private static final String EXTRAS = "url_s";
-
     private static final String SORT_RELEVANCE = "relevance";
 
-    private String query;
+    public PhotoGalleryPresenter() {
 
-    public PhotoGalleryPresenter(String query) {
-        this.query = query;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.i(TAG, "Presenter resumed");
-        attachPageObservable();
-    }
-
-    public void attachPageObservable() {
-
-        Log.i(TAG, "Retrieving photos");
+    public void getPage(Observable<Integer> pagedObservable, String query) {
 
         addSubscription(
-                getView().getPagedObservable()
+                pagedObservable
                         .flatMap(pageNumber -> getPagedObservable(query, pageNumber))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -63,41 +48,21 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
                                             response.photosResponse.page,
                                             response.photosResponse.pages
                                     );
-                                    getView().showPictures(response.photosResponse.photos, pagedResult);
 
-                                    Log.i(TAG, "Response: " + response);
-                                    Log.i(TAG, "Photos: " + response.photosResponse.photos);
+                                    getView().showPictures(response.photosResponse.photos, pagedResult);
                                 },
                                 this::handleError
                         )
-
         );
+
     }
 
     private Observable<FlickrResponse> getPagedObservable(String query, int pageNumber) {
 
         if (query == null) {
-
-            return getCoreApi().getRecentPhotosRx(pageNumber,
-                    METHOD_FETCH_RECENTS,
-                    API_KEY,
-                    FORMAT,
-                    NO_JSON_CALLBACK,
-                    EXTRAS
-            );
-
+            return getCoreApi().getRecentPhotosRx(pageNumber, METHOD_FETCH_RECENTS, API_KEY);
         } else {
-
-            return getCoreApi().getPhotosBySearchRx(pageNumber,
-                    METHOD_SEARCH,
-                    API_KEY,
-                    FORMAT,
-                    NO_JSON_CALLBACK,
-                    EXTRAS,
-                    query,
-                    SORT_RELEVANCE
-            );
-
+            return getCoreApi().getPhotosBySearchRx(pageNumber, METHOD_SEARCH, API_KEY, query, SORT_RELEVANCE);
         }
 
     }
@@ -112,6 +77,7 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
     public interface View extends MvpView {
         void showError();
         void showPictures(List<Photo> photos, PagedResult pagedResult);
-        Observable<Integer> getPagedObservable();
+        void refresh();
+        void updateItems();
     }
 }
