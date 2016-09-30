@@ -2,7 +2,6 @@ package com.rpham64.android.photogallery.ui.gallery;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
@@ -40,10 +39,10 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
     @BindView(R.id.recycler_view_photo_gallery_fragment) UltimateRecyclerView recyclerView;
 
     private PhotoAdapter mAdapter;
-
     private PhotoGalleryPresenter mPresenter;
 
     private String mQuery;
+    private int offset = 6;         // Number of loading images left before loading next page
     private int currentPage = 1;
 
     public static PhotoGalleryFragment newInstance() {
@@ -73,12 +72,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
         // Setup GridLayoutManager as RecyclerView's layout manager
         final GridLayoutManager mLayoutManager = new GridLayoutManager(getActivity(), 3);
         recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setDefaultOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refresh();
-            }
-        });
+        recyclerView.setDefaultOnRefreshListener(() -> refresh());
         recyclerView.reenableLoadmore();
         recyclerView.setOnLoadMoreListener(new UltimateRecyclerView.OnLoadMoreListener() {
             @Override
@@ -87,7 +81,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
                 Log.i(TAG, "Items Count: " + itemsCount);
                 Log.i(TAG, "Position: " + maxLastVisiblePosition);
 
-                if (maxLastVisiblePosition >= itemsCount - 3) {
+                if (maxLastVisiblePosition >= itemsCount - offset) {
                     Log.i(TAG, "Loading more");
                     mPresenter.getPage(Observable.just(currentPage + 1), mQuery);
                 }
@@ -181,8 +175,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
             case R.id.menu_item_clear:
 
                 QueryPreferences.setStoredQuery(getActivity(), null);
-                updateItems();
-
+                refresh();
                 return true;
 
             case R.id.menu_item_toggle_polling:
@@ -213,26 +206,22 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
             recyclerView.setAdapter(mAdapter);
         }
 
+        currentPage = pagedResult.page;
+        Toast.makeText(getContext(), "Loading page: " + currentPage, Toast.LENGTH_SHORT).show();
+
         if (currentPage == 1) {
             mAdapter.setPhotos(photos);
         } else {
             mAdapter.addPhotos(photos);
         }
 
-        currentPage = pagedResult.page;
-
-        Toast.makeText(getContext(), "Page " + currentPage, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void refresh() {
         currentPage = 1;
-        updateItems();
-    }
-
-    @Override
-    public void updateItems() {
         mQuery = QueryPreferences.getStoredQuery(getActivity());
         mPresenter.getPage(Observable.just(currentPage), mQuery);
+        recyclerView.scrollVerticallyToPosition(0);
     }
 }

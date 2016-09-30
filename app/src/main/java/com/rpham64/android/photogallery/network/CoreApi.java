@@ -12,15 +12,28 @@ import rx.Observable;
 
 public interface CoreApi {
 
-    @GET("services/rest/?format=json&nojsoncallback=1&extras=url_s")
-    Observable<FlickrResponse> getRecentPhotosRx(@Query("page") int page,
-                                                 @Query("method") String method,
-                                                 @Query("api_key") String key);
+    String API_KEY = "027c43e90b643994b94b559626dc08be";
+    String METHOD_FETCH_RECENTS = "flickr.photos.getRecent";
+    String METHOD_SEARCH = "flickr.photos.search";
 
-    @GET("services/rest/?format=json&nojsoncallback=1&extras=url_s")
-    Observable<FlickrResponse> getPhotosBySearchRx(@Query("page") int page,
-                                                   @Query("method") String method,
-                                                   @Query("api_key") String key,
-                                                   @Query("text") String query,
-                                                   @Query("sort") String order);
+    String SORT_RELEVANCE = "relevance";
+
+    @GET("services/rest/?" +
+            "format=json" +
+            "&nojsoncallback=1" +
+            "&extras=url_s" +
+            "&method=" + METHOD_FETCH_RECENTS +
+            "&api_key=" + API_KEY
+    )
+    Observable<FlickrResponse> getRecentPhotosRx(@Query("page") int page);
+
+    @GET("services/rest/?" +
+            "format=json" +
+            "&nojsoncallback=1" +
+            "&extras=url_s" +
+            "&method=" + METHOD_SEARCH +
+            "&api_key=" + API_KEY +
+            "&sort=" + SORT_RELEVANCE
+    )
+    Observable<FlickrResponse> getPhotosBySearchRx(@Query("page") int page, @Query("text") String query);
 }

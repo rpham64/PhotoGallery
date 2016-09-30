@@ -23,12 +23,6 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
 
     private static final String TAG = PhotoGalleryPresenter.class.getName();
 
-    private static final String API_KEY = "027c43e90b643994b94b559626dc08be";
-    private static final String METHOD_FETCH_RECENTS = "flickr.photos.getRecent";
-    private static final String METHOD_SEARCH = "flickr.photos.search";
-
-    private static final String SORT_RELEVANCE = "relevance";
-
     public PhotoGalleryPresenter() {
 
     }
@@ -60,9 +54,9 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
     private Observable<FlickrResponse> getPagedObservable(String query, int pageNumber) {
 
         if (query == null) {
-            return getCoreApi().getRecentPhotosRx(pageNumber, METHOD_FETCH_RECENTS, API_KEY);
+            return getCoreApi().getRecentPhotosRx(pageNumber);
         } else {
-            return getCoreApi().getPhotosBySearchRx(pageNumber, METHOD_SEARCH, API_KEY, query, SORT_RELEVANCE);
+            return getCoreApi().getPhotosBySearchRx(pageNumber, query);
         }
 
     }
@@ -78,6 +72,5 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
         void showError();
         void showPictures(List<Photo> photos, PagedResult pagedResult);
         void refresh();
-        void updateItems();
     }
 }

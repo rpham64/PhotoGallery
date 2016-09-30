@@ -17,9 +17,9 @@ android {
     signingConfigs {
         release {
             storeFile file("android.jks")
-            storePassword 'trekon123'
+            storePassword KEYSTORE_PASSWORD
             keyAlias "MyAndroidKey"
-            keyPassword 'trekon123'
+            keyPassword KEY_PASSWORD
         }
     }
 
@@ -28,7 +28,7 @@ android {
             debuggable true
         }
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }

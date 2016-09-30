@@ -38,7 +38,8 @@
                   android:parentActivityName=".ui.gallery.PhotoGalleryActivity"/>
 
         <!-- Polling Service -->
-        <service android:name="com.rpham64.android.photogallery.services.PollService"/>
+        <service android:name=".services.PollService"
+            android:exported="true"/>
 
         <!-- Broadcast Standalone Receiver -->
         <receiver android:name="com.rpham64.android.photogallery.services.StartupReceiver">
@@ -48,7 +49,7 @@
         </receiver>
 
         <receiver android:name="com.rpham64.android.photogallery.services.NotificationReceiver"
-            android:exported="false">
+            android:exported="true">
             <intent-filter
                 android:priority="-999">
                 <action android:name="com.bignerdranch.android.photogallery.SHOW_NOTIFICATION"/>
