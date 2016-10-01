@@ -1,13 +1,17 @@
-package com.rpham64.android.photogallery;
+package com.rpham64.android.photogallery.ui.gallery;
 
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
 
+import com.rpham64.android.photogallery.utils.SingleFragmentActivity;
+
 /**
  * Main Activity
  */
 public class PhotoGalleryActivity extends SingleFragmentActivity {
+
+    private static final String TAG = "PhotoGalleryActivity";
 
     public static Intent newIntent(Context context) {
         return new Intent(context, PhotoGalleryActivity.class);
@@ -17,5 +21,4 @@ public class PhotoGalleryActivity extends SingleFragmentActivity {
     protected Fragment createFragment() {
         return PhotoGalleryFragment.newInstance();
     }
-
 }

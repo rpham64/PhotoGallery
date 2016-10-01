@@ -1,4 +1,4 @@
-package com.rpham64.android.photogallery;
+package com.rpham64.android.photogallery.services;
 
 import android.app.Activity;
 import android.app.AlarmManager;
@@ -11,9 +11,11 @@ import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
+import android.widget.Toast;
 
-import java.util.List;
+import com.rpham64.android.photogallery.R;
+import com.rpham64.android.photogallery.ui.gallery.PhotoGalleryActivity;
+import com.rpham64.android.photogallery.utils.QueryPreferences;
 
 /**
  * Polls for search results in background
@@ -27,17 +29,16 @@ public class PollService extends IntentService {
     private static final String EXTRA_PAGE =
             "com.bignerdranch.android.photogallery.lastpagedfetched";
 
-    private static final long POLL_INTERVAL = 5000 * 60;    // 5 minutes
+    private static final long POLL_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;    // 15 minutes
 
     public static final String ACTION_SHOW_NOTIFICATION =
             "com.bignerdranch.android.photogallery.SHOW_NOTIFICATION";
 
-    public static final String PERMISSION_PRIVATE = "com.bignerdranch.android.photogallery.PRIVATE";
+    public static final String PERMISSION_PRIVATE = "com.rpham64.android.photogallery.PRIVATE";
 
     // Ordered Broadcast Intent strings
     public static final String REQUEST_CODE = "REQUEST_CODE";
     public static final String NOTIFICATION = "NOTIFICATION";
-
 
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
@@ -64,8 +65,9 @@ public class PollService extends IntentService {
      * @param context
      * @param turnOn
      */
+
     public static void setServiceAlarm(Context context, boolean turnOn) {
-        setServiceAlarm(context, 0, turnOn);
+        setServiceAlarm(context, 1, turnOn);
     }
 
     public static void setServiceAlarm(Context context, int lastPageFetched, boolean turnOn) {
@@ -81,9 +83,14 @@ public class PollService extends IntentService {
         if (turnOn) {
             alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME,
                     SystemClock.elapsedRealtime(), POLL_INTERVAL, pendingIntent);
+
+            Toast.makeText(context, "Polling Service ON. New results will be retrieved every 15 minutes.", Toast.LENGTH_LONG).show();
+
         } else {
             alarmManager.cancel(pendingIntent);
             pendingIntent.cancel();
+
+            Toast.makeText(context, "Polling service OFF", Toast.LENGTH_SHORT).show();
         }
 
         // Write to QueryPreferences when alarm is set
@@ -117,54 +124,22 @@ public class PollService extends IntentService {
         // Check: Network available and connected
         if (!isNetworkAvailableAndConnected()) return;
 
-        // 1) Pull out current query and last result ID from QueryPreferences
-        String query = QueryPreferences.getStoredQuery(this);
-        String lastResultId = QueryPreferences.getLastResultId(this);
-        int lastPageFetched = intent.getIntExtra(EXTRA_PAGE, 1);
-        List<GalleryItem> items;
+        // Add a Notification
+        Resources resources = getResources();
+        Intent i = PhotoGalleryActivity.newIntent(this);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, i, 0);
 
-        // 2) Fetch latest result set with FlickrFetchr
-        if (query == null) {
-            items = new FlickrFetchr().fetchRecentPhotos(lastPageFetched);
-        } else {
-            items = new FlickrFetchr().searchPhotos(query, lastPageFetched);
-        }
+        Notification notification = new NotificationCompat.Builder(this)
+                .setTicker(resources.getString(R.string.new_pictures_title))
+                .setSmallIcon(android.R.drawable.ic_menu_report_image)
+                .setContentTitle(resources.getString(R.string.new_pictures_title))
+                .setContentText(resources.getString(R.string.new_pictures_text))
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .build();
 
-        // 3) If there are results, grab the first one
-        if (items.size() == 0) return;
-
-        String resultId = items.get(0).getId();
-
-        // 4) Check: search results are old or new
-        if (resultId.equals(lastResultId)) {
-
-            Log.i(TAG, "Got an old result: " + resultId);
-
-        } else {
-
-            Log.i(TAG, "Got a new result: " + resultId);
-
-            // Add a Notification
-            Resources resources = getResources();
-            Intent i = PhotoGalleryActivity.newIntent(this);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, i, 0);
-
-            Notification notification = new NotificationCompat.Builder(this)
-                    .setTicker(resources.getString(R.string.new_pictures_title))
-                    .setSmallIcon(android.R.drawable.ic_menu_report_image)
-                    .setContentTitle(resources.getString(R.string.new_pictures_title))
-                    .setContentText(resources.getString(R.string.new_pictures_text))
-                    .setContentIntent(pendingIntent)
-                    .setAutoCancel(true)
-                    .build();
-
-            // Display Notification
-            showBackgroundNotification(0, notification);
-        }
-
-        // 5) Store first result back into QueryPreferences
-        QueryPreferences.setLastResultId(this, resultId);
-
+        // Display Notification
+        showBackgroundNotification(0, notification);
     }
 
     /**
@@ -186,7 +161,7 @@ public class PollService extends IntentService {
     }
 
     /**
-     * Checks if network is available for background applications
+     * Checks if com.rpham64.android.photogallery.network is available for background applications
      *
      * @return
      */
@@ -201,5 +176,4 @@ public class PollService extends IntentService {
 
         return isNetworkConnected;
     }
-
 }

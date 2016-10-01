@@ -1,4 +1,4 @@
-package com.rpham64.android.photogallery;
+package com.rpham64.android.photogallery.ui.web;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -32,9 +32,15 @@ import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.rpham64.android.photogallery.R;
+import com.rpham64.android.photogallery.utils.VisibleFragment;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 /**
  * WebView for image
@@ -367,17 +373,7 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
 
         @Override
         protected Bitmap doInBackground(String... params) {
-
-            byte[] byteArray = null;
-
-            try {
-                byteArray = FlickrFetchr.getUrlBytes(mImageUrl);
-            } catch(IOException e) {
-                e.printStackTrace();
-            }
-
-            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-
+            Bitmap bitmap = getBitmapFromURL(mImageUrl);
             return bitmap;
         }
 
@@ -410,6 +406,21 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
 
             }
 
+        }
+
+        public Bitmap getBitmapFromURL(String src) {
+            try {
+                URL url = new URL(src);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                Bitmap myBitmap = BitmapFactory.decodeStream(input);
+                return myBitmap;
+            } catch (IOException e) {
+                // Log exception
+                return null;
+            }
         }
 
         private void viewImageInFullScreen(Uri imageUri) {

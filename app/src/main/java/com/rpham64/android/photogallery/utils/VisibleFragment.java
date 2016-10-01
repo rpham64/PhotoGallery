@@ -1,4 +1,4 @@
-package com.rpham64.android.photogallery;
+package com.rpham64.android.photogallery.utils;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+
+import com.rpham64.android.photogallery.services.PollService;
 
 /**
  * Hides foreground notifications
