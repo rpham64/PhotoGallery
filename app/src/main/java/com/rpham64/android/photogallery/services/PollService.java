@@ -29,7 +29,7 @@ public class PollService extends IntentService {
     private static final String EXTRA_PAGE =
             "com.bignerdranch.android.photogallery.lastpagedfetched";
 
-    private static final long POLL_INTERVAL = 1000;    // 5 minutes
+    private static final long POLL_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;    // 15 minutes
 
     public static final String ACTION_SHOW_NOTIFICATION =
             "com.bignerdranch.android.photogallery.SHOW_NOTIFICATION";
@@ -84,7 +84,7 @@ public class PollService extends IntentService {
             alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME,
                     SystemClock.elapsedRealtime(), POLL_INTERVAL, pendingIntent);
 
-            Toast.makeText(context, "Polling Service ON. New results will be retrieved every 5 minutes.", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Polling Service ON. New results will be retrieved every 15 minutes.", Toast.LENGTH_LONG).show();
 
         } else {
             alarmManager.cancel(pendingIntent);

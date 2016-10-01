@@ -33,15 +33,17 @@ public class BasePresenter<T> implements Presenter<T> {
     @Override
     @CallSuper
     public void onPause() {
-        if (subs != null) {
-            subs.unsubscribe();
-        }
+
     }
 
     @Override
     @CallSuper
     public void onDestroy() {
         mView = null;
+
+        if (subs != null) {
+            subs.unsubscribe();
+        }
     }
 
     @Override
