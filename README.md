@@ -1,34 +1,16 @@
 # PhotoGallery
 
-**Photo Gallery** is a native Android application that **fetches and displays the most recently uploaded pictures to flickr**. 
+**Photo Gallery** is a native Android application that **fetches and displays the most recently uploaded pictures on flickr**. 
 Built using the flickr API, the goal of Photo Gallery is to make image browsing on flickr simpler and faster by using a grid view layout.
 
 <p align="center">
-  <img src="http://i.imgur.com/5olmzQR.gif"/>
+  <img src="http://i.imgur.com/EsIeHyO.gif"/>
   <img src="http://i.imgur.com/pvYmaGw.gif"/>
 </p>
 
 # Installation
 
-**OPTION 1:** Download from the Google Play store here: [Photo Gallery](https://play.google.com/store/apps/details?id=com.rpham64.android.photogallery&hl=en)
-
-**OPTION 2:** 
-
-1. Clone the repository to a folder of your choice
-
-  ` $ cd <path to your folder> `
-  
-  ` $ git init `
-  
-  ` $ git clone https://github.com/rpham64/PhotoGallery.git `
-
-2. Open Android Studio.
-
-3. Go to **File -> New -> Import Project**.
-
-4. Choose the project **PhotoGallery**.
-
-5. Click **Next -> Finish**.
+  * Download from the Google Play store here: [Photo Gallery](https://play.google.com/store/apps/details?id=com.rpham64.android.photogallery&hl=en)
 
 # Technical Concepts
 
@@ -56,8 +38,12 @@ Built using the flickr API, the goal of Photo Gallery is to make image browsing 
 
   * [Gson](https://github.com/google/gson)
   * [Picasso](https://github.com/square/picasso)
+  * [RxJava](https://github.com/ReactiveX/RxJava)
+  * [Retrofit](https://github.com/square/retrofit)
+  * [ButterKnife](https://github.com/JakeWharton/butterknife)
+  * [UltimateRecyclerview](https://github.com/cymcsg/UltimateRecyclerView)
 
 # Contact Me!
 
   * LinkedIn: https://www.linkedin.com/in/rudolfpham
-  * E-mail: rpham64@berkeley.edu
+  * E-mail: rpham64@gmail.com
