@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
+import tr.xip.errorview.ErrorView;
 
 /**
  * Created by Rudolf on 9/25/2016.
@@ -24,6 +25,8 @@ public class ApplicationController extends Application {
     private OkHttpClient mOkHttpClient;
     private CoreApi mCoreApi;
 
+    private ErrorView.Config mErrorConfig;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -32,6 +35,11 @@ public class ApplicationController extends Application {
 
         mOkHttpClient = new OkHttpClient().newBuilder()
                 .addNetworkInterceptor(new StethoInterceptor())
+                .build();
+
+        mErrorConfig = ErrorView.Config.create()
+                .title("Oops!")
+                .retryVisible(true)
                 .build();
     }
 
@@ -57,5 +65,7 @@ public class ApplicationController extends Application {
         return mCoreApi;
     }
 
-
+    public ErrorView.Config getErrorConfig() {
+        return mErrorConfig;
+    }
 }

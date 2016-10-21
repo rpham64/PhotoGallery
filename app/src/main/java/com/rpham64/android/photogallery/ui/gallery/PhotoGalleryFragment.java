@@ -2,8 +2,8 @@ package com.rpham64.android.photogallery.ui.gallery;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.SearchView;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -14,10 +14,12 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.marshalchen.ultimaterecyclerview.UltimateRecyclerView;
+import com.rpham64.android.photogallery.ApplicationController;
 import com.rpham64.android.photogallery.R;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.services.PollService;
 import com.rpham64.android.photogallery.utils.PagedResult;
+import com.rpham64.android.photogallery.utils.PreCachingLayoutManager;
 import com.rpham64.android.photogallery.utils.QueryPreferences;
 import com.rpham64.android.photogallery.utils.VisibleFragment;
 
@@ -25,7 +27,9 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import rx.Observable;
+import tr.xip.errorview.ErrorView;
 
 /**
  * Main Fragment hosted by PhotoGalleryActivity
@@ -37,13 +41,16 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
     private static final String TAG = PhotoGalleryPresenter.class.getName();
 
     @BindView(R.id.recycler_view_photo_gallery_fragment) UltimateRecyclerView recyclerView;
+    @BindView(R.id.error) ErrorView viewError;
+
+    private Unbinder mUnbinder;
 
     private PhotoAdapter mAdapter;
     private PhotoGalleryPresenter mPresenter;
 
     private String mQuery;
-    private int offset = 6;         // Number of loading images left before loading next page
     private int currentPage = 1;
+    private int pages;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -66,25 +73,46 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
-        ButterKnife.bind(this, view);
+        mUnbinder = ButterKnife.bind(this, view);
         mPresenter.attachView(this);
 
         // Setup GridLayoutManager as RecyclerView's layout manager
-        final GridLayoutManager mLayoutManager = new GridLayoutManager(getActivity(), 3);
+        final PreCachingLayoutManager mLayoutManager = new PreCachingLayoutManager(getActivity(), 3);
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        int heightPixels = displayMetrics.heightPixels;
+
+        mLayoutManager.setExtraLayoutSpace(heightPixels);
+
         recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setItemViewCacheSize(15);
+        recyclerView.setDrawingCacheEnabled(true);
+        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         recyclerView.setDefaultOnRefreshListener(() -> refresh());
         recyclerView.reenableLoadmore();
         recyclerView.setOnLoadMoreListener(new UltimateRecyclerView.OnLoadMoreListener() {
             @Override
             public void loadMore(int itemsCount, int maxLastVisiblePosition) {
 
-                Log.i(TAG, "Items Count: " + itemsCount);
-                Log.i(TAG, "Position: " + maxLastVisiblePosition);
-
-                if (maxLastVisiblePosition >= itemsCount - offset) {
-                    Log.i(TAG, "Loading more");
+                if (currentPage < pages) {
+                    Log.i(TAG, "Current: " + currentPage);
+                    Log.i(TAG, "Total Pages: " + pages);
+                    Log.i(TAG, "Loading more for page: " + (currentPage + 1));
                     mPresenter.getPage(Observable.just(currentPage + 1), mQuery);
+                } else {
+                    // Disable load more
+                    Toast.makeText(getContext(), "No more pictures to show.", Toast.LENGTH_SHORT).show();
+                    recyclerView.disableLoadmore();
                 }
+            }
+        });
+
+        viewError.setOnRetryListener(new ErrorView.RetryListener() {
+            @Override
+            public void onRetry() {
+                Toast.makeText(getContext(), "Retrying...", Toast.LENGTH_SHORT).show();
+                refresh();
             }
         });
 
@@ -158,6 +186,12 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mUnbinder.unbind();
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         mPresenter.onDestroy();
@@ -195,11 +229,18 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
 
     @Override
     public void showError() {
-
+        recyclerView.setVisibility(View.GONE);
+        viewError.setVisibility(View.VISIBLE);
+        viewError.setConfig(ApplicationController.getInstance().getErrorConfig());
     }
 
     @Override
     public void showPictures(List<Photo> photos, PagedResult pagedResult) {
+
+        if (viewError.getVisibility() == View.VISIBLE) {
+            recyclerView.setVisibility(View.VISIBLE);
+            viewError.setVisibility(View.GONE);
+        }
 
         if (isAdded() && mAdapter == null) {
             mAdapter = new PhotoAdapter(getContext(), photos);
@@ -207,6 +248,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
         }
 
         currentPage = pagedResult.page;
+        pages = pagedResult.pages;
         Toast.makeText(getContext(), "Loading page: " + currentPage, Toast.LENGTH_SHORT).show();
 
         if (currentPage == 1) {

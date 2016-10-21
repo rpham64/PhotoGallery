@@ -13,5 +13,7 @@
     <string name="intent_share_image">Send image via</string>
     <string name="menu_item_share">Share Url</string>
     <string name="refresh">Refresh</string>
+    <string name="downloading_image">Downloading image...</string>
+    <string name="copied_link">Copied link address to clipboard</string>
 
 </resources>
