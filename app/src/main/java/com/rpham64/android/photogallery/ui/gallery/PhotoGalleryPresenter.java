@@ -1,7 +1,5 @@
 package com.rpham64.android.photogallery.ui.gallery;
 
-import android.util.Log;
-
 import com.orhanobut.logger.Logger;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.network.response.FlickrResponse;
@@ -23,14 +21,19 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
 
     private static final String TAG = PhotoGalleryPresenter.class.getName();
 
+    private static final String METHOD_FETCH_RECENTS = "flickr.photos.getRecent";
+    private static final String METHOD_SEARCH = "flickr.photos.search";
+
+    private static final String SORT_RELEVANCE = "relevance";
+
     public PhotoGalleryPresenter() {
 
     }
 
-    public void getPage(Observable<Integer> pagedObservable, String query) {
+    public void getPage(int page, String query) {
 
         addSubscription(
-                pagedObservable
+                Observable.just(page)
                         .flatMap(pageNumber -> getPagedObservable(query, pageNumber))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -54,15 +57,14 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
     private Observable<FlickrResponse> getPagedObservable(String query, int pageNumber) {
 
         if (query == null) {
-            return getCoreApi().getRecentPhotosRx(pageNumber);
+            return getCoreApi().getRecentPhotosRx(METHOD_FETCH_RECENTS, pageNumber);
         } else {
-            return getCoreApi().getPhotosBySearchRx(pageNumber, query);
+            return getCoreApi().getPhotosBySearchRx(METHOD_SEARCH, pageNumber, query, SORT_RELEVANCE);
         }
 
     }
 
     private void handleError(Throwable throwable) {
-        Log.i(TAG, "Throwable: " + throwable.toString());
         Logger.d(throwable.toString());
         throwable.printStackTrace();
         getView().showError();

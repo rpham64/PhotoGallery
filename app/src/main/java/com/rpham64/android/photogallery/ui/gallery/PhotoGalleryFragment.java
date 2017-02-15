@@ -28,7 +28,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import rx.Observable;
 import tr.xip.errorview.ErrorView;
 
 /**
@@ -64,7 +63,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
 
         mQuery = QueryPreferences.getStoredQuery(getActivity());
         mPresenter = new PhotoGalleryPresenter();
-        mPresenter.getPage(Observable.just(currentPage), mQuery);
+        mPresenter.getPage(currentPage, mQuery);
     }
 
     @Nullable
@@ -99,7 +98,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
                     Log.i(TAG, "Current: " + currentPage);
                     Log.i(TAG, "Total Pages: " + pages);
                     Log.i(TAG, "Loading more for page: " + (currentPage + 1));
-                    mPresenter.getPage(Observable.just(currentPage + 1), mQuery);
+                    mPresenter.getPage(currentPage + 1, mQuery);
                 } else {
                     // Disable load more
                     Toast.makeText(getContext(), "No more pictures to show.", Toast.LENGTH_SHORT).show();
@@ -263,7 +262,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
     public void refresh() {
         currentPage = 1;
         mQuery = QueryPreferences.getStoredQuery(getActivity());
-        mPresenter.getPage(Observable.just(currentPage), mQuery);
+        mPresenter.getPage(currentPage, mQuery);
         recyclerView.scrollVerticallyToPosition(0);
     }
 }
