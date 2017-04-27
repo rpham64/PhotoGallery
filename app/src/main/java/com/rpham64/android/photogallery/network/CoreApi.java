@@ -12,12 +12,11 @@ import rx.Observable;
 
 public interface CoreApi {
 
-    @GET("services/rest")
-    Observable<FlickrResponse> getRecentPhotosRx(@Query("method") String method, @Query("page") int page);
+    @GET("services/rest?method=flickr.photos.getRecent")
+    Observable<FlickrResponse> getRecentPhotosRx(@Query("page") int page);
 
-    @GET("services/rest")
-    Observable<FlickrResponse> getPhotosBySearchRx(@Query("method") String method,
-                                                   @Query("page") int page,
+    @GET("services/rest?method=flickr.photos.search")
+    Observable<FlickrResponse> getPhotosBySearchRx(@Query("page") int page,
                                                    @Query("text") String query,
                                                    @Query("sort") String sortType
     );

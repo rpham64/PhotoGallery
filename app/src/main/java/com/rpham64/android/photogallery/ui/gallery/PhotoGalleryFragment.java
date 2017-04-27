@@ -18,10 +18,11 @@ import com.rpham64.android.photogallery.ApplicationController;
 import com.rpham64.android.photogallery.R;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.services.PollService;
+import com.rpham64.android.photogallery.ui.adapters.PhotoAdapter;
 import com.rpham64.android.photogallery.utils.PagedResult;
 import com.rpham64.android.photogallery.utils.PreCachingLayoutManager;
 import com.rpham64.android.photogallery.utils.QueryPreferences;
-import com.rpham64.android.photogallery.utils.VisibleFragment;
+import com.rpham64.android.photogallery.ui.VisibleFragment;
 
 import java.util.List;
 
@@ -35,7 +36,7 @@ import tr.xip.errorview.ErrorView;
  *
  * Created by Rudolf on 3/12/2016.
  */
-public class PhotoGalleryFragment extends VisibleFragment implements PhotoGalleryPresenter.View {
+public class PhotoGalleryFragment extends VisibleFragment implements PhotoGalleryPresenter.View{
 
     private static final String TAG = PhotoGalleryPresenter.class.getName();
 
@@ -43,6 +44,8 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
     @BindView(R.id.error) ErrorView viewError;
 
     private Unbinder mUnbinder;
+
+    private SearchView viewSearch;
 
     private PhotoAdapter mAdapter;
     private PhotoGalleryPresenter mPresenter;
@@ -95,9 +98,6 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
             public void loadMore(int itemsCount, int maxLastVisiblePosition) {
 
                 if (currentPage < pages) {
-                    Log.i(TAG, "Current: " + currentPage);
-                    Log.i(TAG, "Total Pages: " + pages);
-                    Log.i(TAG, "Loading more for page: " + (currentPage + 1));
                     mPresenter.getPage(currentPage + 1, mQuery);
                 } else {
                     // Disable load more
@@ -124,21 +124,20 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
 
         menuInflater.inflate(R.menu.fragment_photo_gallery, menu);
 
-        final MenuItem searchItem = menu.findItem(R.id.menu_item_search);
-        final SearchView searchView = (SearchView) searchItem.getActionView();
+        final MenuItem itemToggle = menu.findItem(R.id.menu_item_toggle_polling);
+        final MenuItem itemSearch = menu.findItem(R.id.menu_item_search);
+        viewSearch = (SearchView) itemSearch.getActionView();
 
-        togglePollingButtonTitle(menu);
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        viewSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public boolean onQueryTextSubmit(String s) {
+            public boolean onQueryTextSubmit(String query) {
+                Log.i(TAG, "QueryTextSubmit: " + query);
 
-                Log.d(TAG, "QueryTextSubmit: " + s);
+                QueryPreferences.setStoredQuery(getActivity(), query);
 
-                QueryPreferences.setStoredQuery(getActivity(), s);
-                searchView.clearFocus();            // Hides keyboard on submit
-                searchView.setQuery("", false);
-                searchView.setIconified(true);      // Collapses SearchView widget
+                viewSearch.clearFocus();            // Hides keyboard on submit
+                viewSearch.setQuery("", false);
+                viewSearch.setIconified(true);      // Collapses SearchView widget
 
                 refresh();
 
@@ -146,29 +145,23 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
             }
 
             @Override
-            public boolean onQueryTextChange(String s) {
-                Log.d(TAG, "QueryTextChange: " + s);
+            public boolean onQueryTextChange(String newText) {
+                Log.i(TAG, "QueryTextChange: " + newText);
                 return false;
             }
         });
-
-        searchView.setOnSearchClickListener(new View.OnClickListener() {
+        viewSearch.setOnSearchClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String query = QueryPreferences.getStoredQuery(getActivity());
-                searchView.setQuery(query, false);
+                viewSearch.setQuery(query, false);
             }
         });
-    }
-
-    private void togglePollingButtonTitle(Menu menu) {
-        /** Toggle Title for Polling Menu Button */
-        MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
 
         if (PollService.isServiceAlarmOn(getActivity())) {
-            toggleItem.setTitle(R.string.stop_polling);
+            itemToggle.setTitle(R.string.stop_polling);
         } else {
-            toggleItem.setTitle(R.string.start_polling);
+            itemToggle.setTitle(R.string.start_polling);
         }
     }
 
@@ -241,10 +234,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
             viewError.setVisibility(View.GONE);
         }
 
-        if (isAdded() && mAdapter == null) {
-            mAdapter = new PhotoAdapter(getContext(), photos);
-            recyclerView.setAdapter(mAdapter);
-        }
+        setupAdapter(photos);
 
         currentPage = pagedResult.page;
         pages = pagedResult.pages;
@@ -264,5 +254,12 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
         mQuery = QueryPreferences.getStoredQuery(getActivity());
         mPresenter.getPage(currentPage, mQuery);
         recyclerView.scrollVerticallyToPosition(0);
+    }
+
+    private void setupAdapter(List<Photo> photos) {
+        if (isAdded() && mAdapter == null) {
+            mAdapter = new PhotoAdapter(getContext(), photos);
+            recyclerView.setAdapter(mAdapter);
+        }
     }
 }

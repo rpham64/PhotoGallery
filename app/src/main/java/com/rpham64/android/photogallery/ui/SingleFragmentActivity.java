@@ -1,4 +1,4 @@
-package com.rpham64.android.photogallery.utils;
+package com.rpham64.android.photogallery.ui;
 
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;

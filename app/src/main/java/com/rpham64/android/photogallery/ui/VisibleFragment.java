@@ -1,4 +1,4 @@
-package com.rpham64.android.photogallery.utils;
+package com.rpham64.android.photogallery.ui;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;

@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.app.Fragment;
 
-import com.rpham64.android.photogallery.utils.SingleFragmentActivity;
+import com.rpham64.android.photogallery.ui.SingleFragmentActivity;
 
 /**
  * Hosting activity of PhotoPageFragment
@@ -18,8 +18,6 @@ public class PhotoPageActivity extends SingleFragmentActivity {
 
     private static final String TAG = "PhotoPageActivity";
 
-    private PhotoPageFragment mPhotoPageFragment;
-
     public static Intent newIntent(Context context, Uri photoPageUri) {
 
         Intent intent = new Intent(context, PhotoPageActivity.class);
@@ -30,7 +28,6 @@ public class PhotoPageActivity extends SingleFragmentActivity {
 
     @Override
     protected Fragment createFragment() {
-        mPhotoPageFragment = PhotoPageFragment.newInstance(getIntent().getData());
-        return mPhotoPageFragment;
+        return PhotoPageFragment.newInstance(getIntent().getData());
     }
 }

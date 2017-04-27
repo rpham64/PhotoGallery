@@ -4,7 +4,6 @@ import com.orhanobut.logger.Logger;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.network.response.FlickrResponse;
 import com.rpham64.android.photogallery.utils.BasePresenter;
-import com.rpham64.android.photogallery.utils.MvpView;
 import com.rpham64.android.photogallery.utils.PagedResult;
 
 import java.util.List;
@@ -21,9 +20,6 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
 
     private static final String TAG = PhotoGalleryPresenter.class.getName();
 
-    private static final String METHOD_FETCH_RECENTS = "flickr.photos.getRecent";
-    private static final String METHOD_SEARCH = "flickr.photos.search";
-
     private static final String SORT_RELEVANCE = "relevance";
 
     public PhotoGalleryPresenter() {
@@ -38,7 +34,6 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .doOnError(this::handleError)
-                        .retry()
                         .subscribe(
                                 response -> {
                                     PagedResult pagedResult = new PagedResult(
@@ -57,9 +52,9 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
     private Observable<FlickrResponse> getPagedObservable(String query, int pageNumber) {
 
         if (query == null) {
-            return getCoreApi().getRecentPhotosRx(METHOD_FETCH_RECENTS, pageNumber);
+            return getCoreApi().getRecentPhotosRx(pageNumber);
         } else {
-            return getCoreApi().getPhotosBySearchRx(METHOD_SEARCH, pageNumber, query, SORT_RELEVANCE);
+            return getCoreApi().getPhotosBySearchRx(pageNumber, query, SORT_RELEVANCE);
         }
 
     }
@@ -70,7 +65,7 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
         getView().showError();
     }
 
-    public interface View extends MvpView {
+    public interface View {
         void showError();
         void showPictures(List<Photo> photos, PagedResult pagedResult);
         void refresh();

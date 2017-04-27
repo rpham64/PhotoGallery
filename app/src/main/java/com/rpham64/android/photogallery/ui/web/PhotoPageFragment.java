@@ -33,7 +33,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.rpham64.android.photogallery.R;
-import com.rpham64.android.photogallery.utils.VisibleFragment;
+import com.rpham64.android.photogallery.ui.VisibleFragment;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -112,12 +112,6 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         viewWeb.getSettings().setJavaScriptEnabled(true);
         viewWeb.setWebChromeClient(new WebChromeClient() {
 
-            /**
-             * Displays progress bar
-             *
-             * @param view
-             * @param newProgress
-             */
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
 
@@ -130,12 +124,6 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
 
             }
 
-            /**
-             * Update toolbar's subtitle with title of loaded page
-             *
-             * @param view
-             * @param title
-             */
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 AppCompatActivity activity = (AppCompatActivity) getActivity();
@@ -153,6 +141,17 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         viewWeb.setOnCreateContextMenuListener(this);
 
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.menu_photo_web_view, menu);
+
+        MenuItem item = menu.findItem(R.id.menu_item_share);
+
+        setShareIntent(item);
     }
 
     @Override
@@ -181,17 +180,6 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
                 return false;
             }
         });
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-
-        inflater.inflate(R.menu.menu_photo_web_view, menu);
-
-        MenuItem item = menu.findItem(R.id.menu_item_share);
-
-        setShareIntent(item);
     }
 
     private void setShareIntent(MenuItem item) {
