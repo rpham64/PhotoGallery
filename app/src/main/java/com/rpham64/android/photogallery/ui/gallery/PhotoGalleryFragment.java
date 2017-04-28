@@ -40,17 +40,16 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
         PhotoGalleryPresenter.View, UltimateRecyclerView.OnLoadMoreListener,
         SearchView.OnQueryTextListener, ErrorView.RetryListener {
 
-    private static final String TAG = PhotoGalleryPresenter.class.getName();
+    private static final String TAG = PhotoGalleryFragment.class.getName();
 
     @BindView(R.id.recycler_view_photo_gallery_fragment) UltimateRecyclerView recyclerView;
     @BindView(R.id.error) ErrorView viewError;
 
     private Unbinder mUnbinder;
 
-    private SearchView viewSearch;
-
     private PhotoAdapter mAdapter;
     private PhotoGalleryPresenter mPresenter;
+    private SearchView viewSearch;
 
     private List<Photo> mPhotos;
 
@@ -163,7 +162,6 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
             case R.id.menu_item_clear:
 
                 QueryPreferences.setStoredQuery(getActivity(), null);
-                refresh();
                 return true;
 
             case R.id.menu_item_toggle_polling:
@@ -237,9 +235,8 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
 
     @Override
     public void refresh() {
-        mCurrentPage = 1;
         mQuery = QueryPreferences.getStoredQuery(getActivity());
-        mPresenter.getPage(mCurrentPage, mQuery);
+        mPresenter.getPage(1, mQuery);
         recyclerView.scrollVerticallyToPosition(0);
     }
 

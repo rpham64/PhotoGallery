@@ -17,5 +17,7 @@
     <string name="copied_link">Copied link address to clipboard</string>
     <string name="text_swipe_refresh">Try swiping down to refresh the page!</string>
     <string name="text_empty_list">Nothing here.</string>
+    <string name="image_saved">Image saved!</string>
+    <string name="permission_denied">Permission denied by the owner. Unable to interact with this image.</string>
 
 </resources>

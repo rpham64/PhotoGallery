@@ -63,6 +63,7 @@ buildscript {
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 //retrolambda {
@@ -73,6 +74,8 @@ repositories {
 //    defaultMethods false
 //    incremental true
 //}
+
+def AAVersion = '4.3.0'
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
@@ -87,6 +90,8 @@ dependencies {
     compile 'com.facebook.stetho:stetho-okhttp:1.4.1'
     compile 'com.facebook.stetho:stetho-urlconnection:1.4.1'
     compile 'com.orhanobut:logger:1.15'
+    annotationProcessor "org.androidannotations:androidannotations:$AAVersion"
+    compile "org.androidannotations:androidannotations-api:$AAVersion"
     // Networking
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
     compile 'com.squareup.retrofit2:converter-gson:2.1.0'
