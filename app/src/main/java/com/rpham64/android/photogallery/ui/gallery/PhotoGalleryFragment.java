@@ -18,11 +18,11 @@ import com.rpham64.android.photogallery.ApplicationController;
 import com.rpham64.android.photogallery.R;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.services.PollService;
+import com.rpham64.android.photogallery.ui.VisibleFragment;
 import com.rpham64.android.photogallery.ui.adapters.PhotoAdapter;
 import com.rpham64.android.photogallery.utils.PagedResult;
 import com.rpham64.android.photogallery.utils.PreCachingLayoutManager;
 import com.rpham64.android.photogallery.utils.QueryPreferences;
-import com.rpham64.android.photogallery.ui.VisibleFragment;
 
 import java.util.List;
 
@@ -36,7 +36,9 @@ import tr.xip.errorview.ErrorView;
  *
  * Created by Rudolf on 3/12/2016.
  */
-public class PhotoGalleryFragment extends VisibleFragment implements PhotoGalleryPresenter.View{
+public class PhotoGalleryFragment extends VisibleFragment implements View.OnClickListener,
+        PhotoGalleryPresenter.View, UltimateRecyclerView.OnLoadMoreListener,
+        SearchView.OnQueryTextListener, ErrorView.RetryListener {
 
     private static final String TAG = PhotoGalleryPresenter.class.getName();
 
@@ -49,6 +51,8 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
 
     private PhotoAdapter mAdapter;
     private PhotoGalleryPresenter mPresenter;
+
+    private List<Photo> mPhotos;
 
     private String mQuery;
     private int currentPage = 1;
@@ -93,27 +97,11 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         recyclerView.setDefaultOnRefreshListener(() -> refresh());
         recyclerView.reenableLoadmore();
-        recyclerView.setOnLoadMoreListener(new UltimateRecyclerView.OnLoadMoreListener() {
-            @Override
-            public void loadMore(int itemsCount, int maxLastVisiblePosition) {
+        recyclerView.setOnLoadMoreListener(this);
 
-                if (currentPage < pages) {
-                    mPresenter.getPage(currentPage + 1, mQuery);
-                } else {
-                    // Disable load more
-                    Toast.makeText(getContext(), "No more pictures to show.", Toast.LENGTH_SHORT).show();
-                    recyclerView.disableLoadmore();
-                }
-            }
-        });
+        viewError.setOnRetryListener(this);
 
-        viewError.setOnRetryListener(new ErrorView.RetryListener() {
-            @Override
-            public void onRetry() {
-                Toast.makeText(getContext(), "Retrying...", Toast.LENGTH_SHORT).show();
-                refresh();
-            }
-        });
+        setupAdapter(mPhotos);
 
         return view;
     }
@@ -126,37 +114,10 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
 
         final MenuItem itemToggle = menu.findItem(R.id.menu_item_toggle_polling);
         final MenuItem itemSearch = menu.findItem(R.id.menu_item_search);
+
         viewSearch = (SearchView) itemSearch.getActionView();
-
-        viewSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                Log.i(TAG, "QueryTextSubmit: " + query);
-
-                QueryPreferences.setStoredQuery(getActivity(), query);
-
-                viewSearch.clearFocus();            // Hides keyboard on submit
-                viewSearch.setQuery("", false);
-                viewSearch.setIconified(true);      // Collapses SearchView widget
-
-                refresh();
-
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                Log.i(TAG, "QueryTextChange: " + newText);
-                return false;
-            }
-        });
-        viewSearch.setOnSearchClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String query = QueryPreferences.getStoredQuery(getActivity());
-                viewSearch.setQuery(query, false);
-            }
-        });
+        viewSearch.setOnQueryTextListener(this);
+        viewSearch.setOnClickListener(this);
 
         if (PollService.isServiceAlarmOn(getActivity())) {
             itemToggle.setTitle(R.string.stop_polling);
@@ -220,6 +181,12 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
     }
 
     @Override
+    public void onClick(View v) {
+        String query = QueryPreferences.getStoredQuery(getActivity());
+        viewSearch.setQuery(query, false);
+    }
+
+    @Override
     public void showError() {
         recyclerView.setVisibility(View.GONE);
         viewError.setVisibility(View.VISIBLE);
@@ -234,18 +201,55 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
             viewError.setVisibility(View.GONE);
         }
 
-        setupAdapter(photos);
-
         currentPage = pagedResult.page;
         pages = pagedResult.pages;
         Toast.makeText(getContext(), "Loading page: " + currentPage, Toast.LENGTH_SHORT).show();
 
         if (currentPage == 1) {
-            mAdapter.setPhotos(photos);
+            mPhotos = photos;
+            setupAdapter(photos);
         } else {
             mAdapter.addPhotos(photos);
         }
 
+    }
+
+    @Override
+    public void loadMore(int itemsCount, int maxLastVisiblePosition) {
+        if (currentPage < pages) {
+            mPresenter.getPage(currentPage + 1, mQuery);
+        } else {
+            // Disable load more
+            Toast.makeText(getContext(), "No more pictures to show.", Toast.LENGTH_SHORT).show();
+            recyclerView.disableLoadmore();
+        }
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        Log.i(TAG, "QueryTextSubmit: " + query);
+
+        QueryPreferences.setStoredQuery(getActivity(), query);
+
+        viewSearch.clearFocus();            // Hides keyboard on submit
+        viewSearch.setQuery("", false);
+        viewSearch.setIconified(true);      // Collapses SearchView widget
+
+        refresh();
+
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        Log.i(TAG, "QueryTextChange: " + newText);
+        return false;
+    }
+
+    @Override
+    public void onRetry() {
+        Toast.makeText(getContext(), "Retrying...", Toast.LENGTH_SHORT).show();
+        refresh();
     }
 
     @Override
@@ -257,7 +261,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements PhotoGaller
     }
 
     private void setupAdapter(List<Photo> photos) {
-        if (isAdded() && mAdapter == null) {
+        if (isAdded()) {
             mAdapter = new PhotoAdapter(getContext(), photos);
             recyclerView.setAdapter(mAdapter);
         }
