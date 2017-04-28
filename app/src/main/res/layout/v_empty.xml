@@ -10,7 +10,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="Nothing here."/>
+        android:text="@string/text_empty_list"
+        />
 
     <TextView
         android:id="@+id/text_swipe_to_refresh"
@@ -19,6 +20,7 @@
         android:layout_centerInParent="true"
         android:layout_marginTop="@dimen/vspacing_xs"
         android:layout_below="@id/text_nothing_here"
-        android:text="Try swiping down to refresh the page!"/>
+        android:text="@string/text_swipe_refresh"
+        />
 
 </RelativeLayout>

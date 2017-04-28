@@ -15,5 +15,7 @@
     <string name="refresh">Refresh</string>
     <string name="downloading_image">Downloading image...</string>
     <string name="copied_link">Copied link address to clipboard</string>
+    <string name="text_swipe_refresh">Try swiping down to refresh the page!</string>
+    <string name="text_empty_list">Nothing here.</string>
 
 </resources>

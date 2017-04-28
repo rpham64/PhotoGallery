@@ -55,8 +55,8 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
     private List<Photo> mPhotos;
 
     private String mQuery;
-    private int currentPage = 1;
-    private int pages;
+    private int mCurrentPage;
+    private int mPages;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -68,9 +68,10 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
         setRetainInstance(true);            // Retain fragment state on configuration changes
         setHasOptionsMenu(true);            // Include toolbar
 
+        mCurrentPage = 1;
         mQuery = QueryPreferences.getStoredQuery(getActivity());
         mPresenter = new PhotoGalleryPresenter();
-        mPresenter.getPage(currentPage, mQuery);
+        mPresenter.getPage(mCurrentPage, mQuery);
     }
 
     @Nullable
@@ -181,19 +182,6 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
     }
 
     @Override
-    public void onClick(View v) {
-        String query = QueryPreferences.getStoredQuery(getActivity());
-        viewSearch.setQuery(query, false);
-    }
-
-    @Override
-    public void showError() {
-        recyclerView.setVisibility(View.GONE);
-        viewError.setVisibility(View.VISIBLE);
-        viewError.setConfig(ApplicationController.getInstance().getErrorConfig());
-    }
-
-    @Override
     public void showPictures(List<Photo> photos, PagedResult pagedResult) {
 
         if (viewError.getVisibility() == View.VISIBLE) {
@@ -201,13 +189,14 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
             viewError.setVisibility(View.GONE);
         }
 
-        currentPage = pagedResult.page;
-        pages = pagedResult.pages;
-        Toast.makeText(getContext(), "Loading page: " + currentPage, Toast.LENGTH_SHORT).show();
+        mCurrentPage = pagedResult.page;
+        mPages = pagedResult.pages;
+        Toast.makeText(getContext(), "Loading page: " + mCurrentPage, Toast.LENGTH_SHORT).show();
 
-        if (currentPage == 1) {
+        if (mCurrentPage == 1) {
             mPhotos = photos;
             setupAdapter(photos);
+            mAdapter.notifyDataSetChanged();
         } else {
             mAdapter.addPhotos(photos);
         }
@@ -216,8 +205,8 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
 
     @Override
     public void loadMore(int itemsCount, int maxLastVisiblePosition) {
-        if (currentPage < pages) {
-            mPresenter.getPage(currentPage + 1, mQuery);
+        if (mCurrentPage < mPages) {
+            mPresenter.getPage(mCurrentPage + 1, mQuery);
         } else {
             // Disable load more
             Toast.makeText(getContext(), "No more pictures to show.", Toast.LENGTH_SHORT).show();
@@ -247,17 +236,30 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
     }
 
     @Override
+    public void refresh() {
+        mCurrentPage = 1;
+        mQuery = QueryPreferences.getStoredQuery(getActivity());
+        mPresenter.getPage(mCurrentPage, mQuery);
+        recyclerView.scrollVerticallyToPosition(0);
+    }
+
+    @Override
+    public void showError() {
+        recyclerView.setVisibility(View.GONE);
+        viewError.setVisibility(View.VISIBLE);
+        viewError.setConfig(ApplicationController.getInstance().getErrorConfig());
+    }
+
+    @Override
     public void onRetry() {
         Toast.makeText(getContext(), "Retrying...", Toast.LENGTH_SHORT).show();
         refresh();
     }
 
     @Override
-    public void refresh() {
-        currentPage = 1;
-        mQuery = QueryPreferences.getStoredQuery(getActivity());
-        mPresenter.getPage(currentPage, mQuery);
-        recyclerView.scrollVerticallyToPosition(0);
+    public void onClick(View v) {
+        String query = QueryPreferences.getStoredQuery(getActivity());
+        viewSearch.setQuery(query, false);
     }
 
     private void setupAdapter(List<Photo> photos) {
