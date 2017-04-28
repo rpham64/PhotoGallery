@@ -19,4 +19,8 @@
         android:layout_alignParentBottom="true"
         android:layout_below="@id/fragment_photo_page_progress_bar"/>
 
+    <include
+        android:id="@+id/error"
+        layout="@layout/v_error" />
+
 </RelativeLayout>

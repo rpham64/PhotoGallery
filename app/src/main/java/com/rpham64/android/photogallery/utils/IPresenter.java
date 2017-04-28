@@ -6,7 +6,7 @@ package com.rpham64.android.photogallery.utils;
  *
  * Source: https://github.com/ribot/android-boilerplate/tree/master/app/src/main/java/uk/co/ribot/androidboilerplate/ui/base
  */
-public interface Presenter<V> {
+public interface IPresenter<V> {
 
     void attachView(V mvpView);
 

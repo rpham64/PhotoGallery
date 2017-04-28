@@ -13,13 +13,13 @@ import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;
 
 /**
- * Base class that implements the Presenter interface and provides a base implementation for
+ * Base class that implements the IPresenter interface and provides a base implementation for
  * attachView() and detachView(). It also handles keeping a reference to the mvpView that
  * can be accessed from the children classes by calling getView().
  *
  * Source: https://github.com/ribot/android-boilerplate/tree/master/app/src/main/java/uk/co/ribot/androidboilerplate/ui/base
  */
-public class BasePresenter<T> implements Presenter<T> {
+public class BasePresenter<T> implements IPresenter<T> {
 
     private T mView;
     private CompositeSubscription subs = new CompositeSubscription();

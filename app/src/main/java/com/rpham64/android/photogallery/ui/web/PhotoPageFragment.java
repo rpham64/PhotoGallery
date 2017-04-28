@@ -33,7 +33,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.rpham64.android.photogallery.R;
-import com.rpham64.android.photogallery.utils.VisibleFragment;
+import com.rpham64.android.photogallery.ui.VisibleFragment;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,6 +42,11 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
+import tr.xip.errorview.ErrorView;
+
 /**
  * WebView for image
  *
@@ -49,26 +54,34 @@ import java.net.URL;
  */
 public class PhotoPageFragment extends VisibleFragment implements View.OnCreateContextMenuListener, Runnable {
 
-    private static final String TAG = "PhotoPageFragment";
+    private static final String TAG = PhotoPageFragment.class.getName();
 
-    private static final String ARG_URI = "photo_page_url";
+    interface Arguments {
+        String ARG_URI = "PhotoPageFragment.uri";
+    }
 
-    private static final String METHOD_FULL_SCREEN = "full_screen";
-    private static final String METHOD_COPY_LINK = "copy_link";
-    private static final String METHOD_SAVE = "save";
-    private static final String METHOD_SHARE = "share";
+    interface Methods {
+        String FULL_SCREEN = "PhotoPageFragment.fullScreen";
+        String COPY_LINK = "PhotoPageFragment.copyLink";
+        String SAVE = "PhotoPageFragment.save";
+        String SHARE = "PhotoPageFragment.share";
+    }
+
+    @BindView(R.id.fragment_photo_page_progress_bar) ProgressBar barProgress;
+    @BindView(R.id.fragment_photo_page_web_view) WebView viewWeb;
+    @BindView(R.id.error) ErrorView viewError;
+
+    private Unbinder mUnbinder;
 
     private Uri mUri;
     private String mImageUrl;
 
-    private WebView mWebView;
-    private ProgressBar mProgressBar;
     private ShareActionProvider mShareActionProvider;
 
     public static PhotoPageFragment newInstance(Uri uri) {
 
         Bundle args = new Bundle();
-        args.putParcelable(ARG_URI, uri);
+        args.putParcelable(Arguments.ARG_URI, uri);
 
         PhotoPageFragment fragment = new PhotoPageFragment();
         fragment.setArguments(args);
@@ -80,11 +93,9 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        retrievePageUri();
-    }
-
-    private void retrievePageUri() {
-        mUri = getArguments().getParcelable(ARG_URI);
+        if (getArguments() != null) {
+            mUri = getArguments().getParcelable(Arguments.ARG_URI);
+        }
     }
 
     @Nullable
@@ -92,72 +103,68 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_photo_page, container, false);
+        mUnbinder = ButterKnife.bind(this, view);
 
-        mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_photo_page_progress_bar);
-        mProgressBar.setMax(100);
+        barProgress.setMax(100);
 
-        mWebView = (WebView) view.findViewById(R.id.fragment_photo_page_web_view);
+        registerForContextMenu(viewWeb);
 
-        registerForContextMenu(mWebView);
+        viewWeb.getSettings().setJavaScriptEnabled(true);
+        viewWeb.setWebChromeClient(new WebChromeClient() {
 
-        enableJavascript();
-        setWebViewClient();
-        setClientToRightActivity(); // If not WebView
-
-        // Load URL into WebView
-        mWebView.loadUrl(mUri.toString());
-
-        Log.i(TAG, "Loaded Uri: " + mUri.toString());
-
-        mWebView.setOnCreateContextMenuListener(this);
-
-        return view;
-    }
-
-    private void enableJavascript() {
-        mWebView.getSettings().setJavaScriptEnabled(true);
-    }
-
-    private void setWebViewClient() {
-        mWebView.setWebChromeClient(new WebChromeClient() {
-
-            /**
-             * Displays progress bar
-             *
-             * @param view
-             * @param newProgress
-             */
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
 
                 if (newProgress == 100) {
-                    mProgressBar.setVisibility(View.GONE);
+                    barProgress.setVisibility(View.GONE);
                 } else {
-                    mProgressBar.setVisibility(View.VISIBLE);
-                    mProgressBar.setProgress(newProgress);
+                    barProgress.setVisibility(View.VISIBLE);
+                    barProgress.setProgress(newProgress);
                 }
 
             }
 
-            /**
-             * Update toolbar's subtitle with title of loaded page
-             *
-             * @param view
-             * @param title
-             */
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 AppCompatActivity activity = (AppCompatActivity) getActivity();
                 activity.getSupportActionBar().setSubtitle(title);
             }
         });
+
+        setClientToRightActivity(); // If not WebView
+
+        // Load URL into WebView
+        viewWeb.loadUrl(mUri.toString());
+
+        Log.i(TAG, "Loaded Uri: " + mUri.toString());
+
+        viewWeb.setOnCreateContextMenuListener(this);
+
+        return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.menu_photo_web_view, menu);
+
+        MenuItem item = menu.findItem(R.id.menu_item_share);
+
+        setShareIntent(item);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mUnbinder.unbind();
     }
 
     private void setClientToRightActivity() {
         // Override WebViewClient method to return false
         // This lets the app open the clicked image's webview in
         // the task and not in the phone's default browser
-        mWebView.setWebViewClient(new WebViewClient() {
+        viewWeb.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
 
@@ -175,17 +182,6 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         });
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-
-        inflater.inflate(R.menu.menu_photo_web_view, menu);
-
-        MenuItem item = menu.findItem(R.id.menu_item_share);
-
-        setShareIntent(item);
-    }
-
     private void setShareIntent(MenuItem item) {
         // Fetch and store ShareActionProvider
         mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
@@ -199,7 +195,7 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
     private Intent createShareIntent() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
-        shareIntent.putExtra(Intent.EXTRA_TEXT, mWebView.getUrl());
+        shareIntent.putExtra(Intent.EXTRA_TEXT, viewWeb.getUrl());
         return shareIntent;
     }
 
@@ -208,24 +204,19 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
 
         switch (item.getItemId()) {
 
-            // Respond to action bar's Up/Home button
             case android.R.id.home:
-                return navigateUpToHomeActivity();
+                NavUtils.navigateUpFromSameTask(getActivity());
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    private boolean navigateUpToHomeActivity() {
-        NavUtils.navigateUpFromSameTask(getActivity());
-        return true;
     }
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
 
-        HitTestResult result = mWebView.getHitTestResult();
+        HitTestResult result = viewWeb.getHitTestResult();
 
         if (isImageType(result) || isSrcImageAnchorType(result)) {
             mImageUrl = result.getExtra();  // Save Image URL
@@ -257,22 +248,24 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
 
             case R.id.enter_full_screen_context_item:
 
-                executeFullScreenTask();
+                new RetrieveImageTask(Methods.FULL_SCREEN).execute();
                 break;
 
             case R.id.copy_link_address_context_item:
 
-                executeCopyLinkTask();
+                Toast.makeText(getActivity(), getString(R.string.copied_link), Toast.LENGTH_SHORT).show();
+                new RetrieveImageTask(Methods.COPY_LINK).execute();
                 break;
 
             case R.id.save_image_context_item:
 
-                executeSaveImageTask();
+                Toast.makeText(getActivity(), getString(R.string.downloading_image), Toast.LENGTH_SHORT).show();
+                new RetrieveImageTask(Methods.SAVE).execute();
                 break;
 
             case R.id.share_image_context_item:
 
-                executeShareImageTask();
+                new RetrieveImageTask(Methods.SHARE).execute();
                 break;
 
         }
@@ -302,47 +295,6 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
         return;
     }
 
-    private void executeFullScreenTask() {
-        new RetrieveImageTask(METHOD_FULL_SCREEN).execute();
-        return;
-    }
-
-    private void executeCopyLinkTask() {
-
-        showCopyingLinkToast();
-
-        new RetrieveImageTask(METHOD_COPY_LINK).execute();
-        return;
-    }
-
-    private void showCopyingLinkToast() {
-        String copyingLinkMsg = "Copied link address to clipboard";
-
-        Toast.makeText(getActivity(), copyingLinkMsg, Toast.LENGTH_SHORT).show();
-    }
-
-    private void executeSaveImageTask() {
-
-        showDownloadingToast();
-
-        new RetrieveImageTask(METHOD_SAVE).execute();
-
-        return;
-    }
-
-    private void showDownloadingToast() {
-
-        String downloadingMsg = "Downloading image...";
-
-        Toast.makeText(getActivity(), downloadingMsg, Toast.LENGTH_SHORT).show();
-    }
-
-    private void executeShareImageTask() {
-        new RetrieveImageTask(METHOD_SHARE).execute();
-        return;
-    }
-
-
     /**
      * Back press moves WebView back through its items in its browsing history
      *
@@ -350,8 +302,8 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
      */
     public boolean isBackPressed() {
 
-        if (mWebView.canGoBack()) {
-            mWebView.goBack();
+        if (viewWeb.canGoBack()) {
+            viewWeb.goBack();
             return true;
         }
 
@@ -384,24 +336,24 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
 
             switch (mMethod) {
 
-                case METHOD_FULL_SCREEN:
+                case Methods.FULL_SCREEN:
 
                     viewImageInFullScreen(imageUri);
                     break;
 
-                case METHOD_COPY_LINK:
+                case Methods.COPY_LINK:
 
                     copyLink(imageUri);
                     break;
 
-                case METHOD_SAVE:
+                case Methods.SAVE:
 
                     saveImageToExternalMemory(bitmap);
                     break;
 
-                case METHOD_SHARE:
+                case Methods.SHARE:
 
-                    shareImage(bitmap);
+                    shareImage();
                     break;
 
             }
@@ -470,25 +422,13 @@ public class PhotoPageFragment extends VisibleFragment implements View.OnCreateC
             Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
         }
 
-        private void shareImage(Bitmap bitmap) {
-            /*ShareCompat.IntentBuilder intentBuilder = ShareCompat.IntentBuilder.from(getActivity());
-
-            intentBuilder.setChooserTitle(R.string.intent_share_image)
-                    .setType("image*//*")
-                    .addStream(imageUri);
-
-            Intent intent = Intent.createChooser(
-                    intentBuilder.getIntent(),
-                    getString(R.string.intent_share_image));
-
-            startActivity(intent);*/
+        private void shareImage() {
 
             // Create image file
             File sdCardDirectory = Environment.getExternalStorageDirectory();
             String filename = mImageUrl
                     .substring(mImageUrl.lastIndexOf('/') + 1, mImageUrl.length());
             File image = new File(sdCardDirectory, filename);
-
 
             Intent shareIntent = new Intent();
             shareIntent.setAction(Intent.ACTION_SEND);
