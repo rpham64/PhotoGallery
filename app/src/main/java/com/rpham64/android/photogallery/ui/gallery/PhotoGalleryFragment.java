@@ -2,6 +2,9 @@ package com.rpham64.android.photogallery.ui.gallery;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -13,7 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.marshalchen.ultimaterecyclerview.UltimateRecyclerView;
+import com.malinskiy.superrecyclerview.OnMoreListener;
+import com.malinskiy.superrecyclerview.SuperRecyclerView;
 import com.rpham64.android.photogallery.ApplicationController;
 import com.rpham64.android.photogallery.R;
 import com.rpham64.android.photogallery.models.Photo;
@@ -29,6 +33,10 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter;
+import jp.wasabeef.recyclerview.adapters.SlideInBottomAnimationAdapter;
+import jp.wasabeef.recyclerview.adapters.SlideInLeftAnimationAdapter;
+import jp.wasabeef.recyclerview.animators.FadeInAnimator;
 import tr.xip.errorview.ErrorView;
 
 /**
@@ -37,12 +45,14 @@ import tr.xip.errorview.ErrorView;
  * Created by Rudolf on 3/12/2016.
  */
 public class PhotoGalleryFragment extends VisibleFragment implements View.OnClickListener,
-        PhotoGalleryPresenter.View, UltimateRecyclerView.OnLoadMoreListener,
-        SearchView.OnQueryTextListener, ErrorView.RetryListener {
+        PhotoGalleryPresenter.View, SearchView.OnQueryTextListener,
+        SwipeRefreshLayout.OnRefreshListener, OnMoreListener, ErrorView.RetryListener {
 
     private static final String TAG = PhotoGalleryFragment.class.getName();
 
-    @BindView(R.id.recycler_view_photo_gallery_fragment) UltimateRecyclerView recyclerView;
+    public static final int LOAD_MORE_OFFSET = 30;
+
+    @BindView(R.id.recycler_view_photo_gallery_fragment) SuperRecyclerView recyclerView;
     @BindView(R.id.error) ErrorView viewError;
 
     private Unbinder mUnbinder;
@@ -82,22 +92,19 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
         mUnbinder = ButterKnife.bind(this, view);
         mPresenter.attachView(this);
 
-        // Setup GridLayoutManager as RecyclerView's layout manager
-        final PreCachingLayoutManager mLayoutManager = new PreCachingLayoutManager(getActivity(), 3);
-
+        // Set layout manager to precache a full screen of contents
         DisplayMetrics displayMetrics = new DisplayMetrics();
         int heightPixels = displayMetrics.heightPixels;
 
-        mLayoutManager.setExtraLayoutSpace(heightPixels);
+        final PreCachingLayoutManager mLayoutManager =
+                new PreCachingLayoutManager(getActivity(), 3, heightPixels);
 
         recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setItemViewCacheSize(15);
-        recyclerView.setDrawingCacheEnabled(true);
-        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-        recyclerView.setDefaultOnRefreshListener(() -> refresh());
-        recyclerView.reenableLoadmore();
-        recyclerView.setOnLoadMoreListener(this);
+        recyclerView.getRecyclerView().setItemAnimator(new FadeInAnimator());
+        recyclerView.setRefreshListener(this);
+        recyclerView.setOnMoreListener(this);
+
+        setupItemAnimator(1000);
 
         viewError.setOnRetryListener(this);
 
@@ -125,18 +132,6 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
         } else {
             itemToggle.setTitle(R.string.start_polling);
         }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        mPresenter.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        mPresenter.onPause();
     }
 
     @Override
@@ -203,14 +198,18 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
     }
 
     @Override
-    public void loadMore(int itemsCount, int maxLastVisiblePosition) {
-        if (mCurrentPage < mPages) {
+    public void onMoreAsked(int overallItemsCount, int itemsBeforeMore, int maxLastVisiblePosition) {
+
+        boolean canLoadMore = itemsBeforeMore + maxLastVisiblePosition + LOAD_MORE_OFFSET >= overallItemsCount;
+
+        if (canLoadMore && mCurrentPage < mPages) {
             mPresenter.getPage(mCurrentPage + 1, mQuery);
-        } else {
-            // Disable load more
-            Toast.makeText(getContext(), "No more pictures to show.", Toast.LENGTH_SHORT).show();
-            recyclerView.disableLoadmore();
         }
+    }
+
+    @Override
+    public void onRefresh() {
+        refresh();
     }
 
     @Override
@@ -238,7 +237,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
     public void refresh() {
         mQuery = QueryPreferences.getStoredQuery(getActivity());
         mPresenter.getPage(1, mQuery);
-        recyclerView.scrollVerticallyToPosition(0);
+        recyclerView.getRecyclerView().getLayoutManager().scrollToPosition(0);
     }
 
     @Override
@@ -263,7 +262,19 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
     private void setupAdapter(List<Photo> photos) {
         if (isAdded()) {
             mAdapter = new PhotoAdapter(getContext(), photos);
-            recyclerView.setAdapter(mAdapter);
+            SlideInBottomAnimationAdapter animationAdapter = new SlideInBottomAnimationAdapter(mAdapter);
+            animationAdapter.setDuration(500);
+            recyclerView.setAdapter(animationAdapter);
         }
+    }
+
+    private void setupItemAnimator(int duration) {
+
+        RecyclerView.ItemAnimator animator = recyclerView.getRecyclerView().getItemAnimator();
+
+        animator.setAddDuration(duration);
+        animator.setRemoveDuration(duration);
+        animator.setMoveDuration(duration);
+        animator.setChangeDuration(duration);
     }
 }

@@ -5,11 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.marshalchen.ultimaterecyclerview.UltimateRecyclerView
+    <com.malinskiy.superrecyclerview.SuperRecyclerView
         android:id="@+id/recycler_view_photo_gallery_fragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:recyclerviewEmptyView="@layout/v_empty"
+        app:layout_empty="@layout/v_empty"
         />
 
     <include

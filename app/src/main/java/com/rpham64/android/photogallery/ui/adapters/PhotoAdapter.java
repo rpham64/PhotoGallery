@@ -8,8 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.marshalchen.ultimaterecyclerview.UltimateRecyclerviewViewHolder;
-import com.marshalchen.ultimaterecyclerview.UltimateViewAdapter;
 import com.rpham64.android.photogallery.R;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.ui.web.PhotoPageActivity;
@@ -25,7 +23,7 @@ import butterknife.OnClick;
  * Created by Rudolf on 9/23/2016.
  */
 
-public class PhotoAdapter extends UltimateViewAdapter<PhotoAdapter.PhotoHolder> {
+public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.PhotoHolder> {
 
     private Context mContext;
     private List<Photo> mPhotos;
@@ -37,7 +35,7 @@ public class PhotoAdapter extends UltimateViewAdapter<PhotoAdapter.PhotoHolder> 
     }
 
     @Override
-    public PhotoHolder onCreateViewHolder(ViewGroup parent) {
+    public PhotoHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(R.layout.v_gallery_item, parent, false);
         ButterKnife.bind(this, view);
@@ -52,41 +50,16 @@ public class PhotoAdapter extends UltimateViewAdapter<PhotoAdapter.PhotoHolder> 
     }
 
     @Override
-    public PhotoHolder newFooterHolder(View view) {
-        return null;
+    public long getItemId(int position) {
+        return mPhotos.get(position).hashCode();
     }
 
     @Override
-    public PhotoHolder newHeaderHolder(View view) {
-        return null;
-    }
-
-    @Override
-    public RecyclerView.ViewHolder onCreateHeaderViewHolder(ViewGroup parent) {
-        return null;
-    }
-
-    @Override
-    public void onBindHeaderViewHolder(RecyclerView.ViewHolder holder, int position) {
-
-    }
-
-    @Override
-    public int getAdapterItemCount() {
+    public int getItemCount() {
         if (mPhotos != null) {
             return mPhotos.size();
         }
         return 0;
-    }
-
-    @Override
-    public long generateHeaderId(int position) {
-        return 0;
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return mPhotos.get(position).hashCode();
     }
 
     public void setPhotos(List<Photo> photos) {
@@ -102,7 +75,7 @@ public class PhotoAdapter extends UltimateViewAdapter<PhotoAdapter.PhotoHolder> 
     /**
      * ViewHolder class that binds GalleryItem to an ImageView (ie. adds picture to UI)
      */
-    class PhotoHolder extends UltimateRecyclerviewViewHolder {
+    class PhotoHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.fragment_photo_gallery_image_view) ImageView imgPhoto;
 
