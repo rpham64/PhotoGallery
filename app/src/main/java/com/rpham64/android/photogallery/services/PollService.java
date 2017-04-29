@@ -40,9 +40,6 @@ public class PollService extends IntentService {
     public static final String REQUEST_CODE = "REQUEST_CODE";
     public static final String NOTIFICATION = "NOTIFICATION";
 
-    /**
-     * Creates an IntentService.  Invoked by your subclass's constructor.
-     */
     public PollService() {
         super(TAG);
     }

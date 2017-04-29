@@ -29,6 +29,7 @@ public class Photo {
                 .buildUpon()
                 .appendPath(owner)
                 .appendPath(id)
+                .appendPath("in/photostream")
                 .build();
     }
 

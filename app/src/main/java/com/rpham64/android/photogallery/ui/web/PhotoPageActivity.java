@@ -18,6 +18,8 @@ public class PhotoPageActivity extends SingleFragmentActivity {
 
     private static final String TAG = "PhotoPageActivity";
 
+    private PhotoPageFragment mFragment;
+
     public static Intent newIntent(Context context, Uri photoPageUri) {
 
         Intent intent = new Intent(context, PhotoPageActivity.class);
@@ -28,6 +30,12 @@ public class PhotoPageActivity extends SingleFragmentActivity {
 
     @Override
     protected Fragment createFragment() {
-        return PhotoPageFragment.newInstance(getIntent().getData());
+        mFragment = PhotoPageFragment.newInstance(getIntent().getData());
+        return mFragment;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!mFragment.canGoBackThroughWebView()) super.onBackPressed();
     }
 }

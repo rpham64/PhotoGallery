@@ -1,4 +1,4 @@
-package com.rpham64.android.photogallery.ui.web;
+package com.rpham64.android.photogallery.utils;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -7,36 +7,29 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
+import android.webkit.WebView;
 import android.widget.Toast;
 
 import com.rpham64.android.photogallery.R;
-import com.rpham64.android.photogallery.utils.BasePresenter;
-import com.rpham64.android.photogallery.utils.UrlUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
- * Created by Rudolf on 4/27/2017.
+ * Created by Rudolf on 4/28/2017.
  */
 
-public class PhotoPagePresenter extends BasePresenter<PhotoPagePresenter.View> {
+public class ImageUtils {
 
-    private Context mContext;
-
-    public PhotoPagePresenter(Context context) {
-        mContext = context;
-    }
-
-    public void viewFullScreenMode(Uri imageUri) {
+    public static void viewFullScreenMode(Context mContext, Uri imageUri) {
         Intent intentFullScreen = new Intent();
         intentFullScreen.setAction(Intent.ACTION_VIEW);
         intentFullScreen.setDataAndType(imageUri, "image/png");
         mContext.startActivity(intentFullScreen);
     }
 
-    public void copyLink(Uri imageUri) {
+    public static void copyLink(Context mContext, Uri imageUri) {
 
         Toast.makeText(mContext, mContext.getString(R.string.copied_link), Toast.LENGTH_SHORT).show();
 
@@ -51,7 +44,7 @@ public class PhotoPagePresenter extends BasePresenter<PhotoPagePresenter.View> {
         clipboard.setPrimaryClip(clip);
     }
 
-    public void saveImage(String mImageUrl) {
+    public static void saveImage(Context mContext, String mImageUrl) {
 
         Bitmap bitmap = UrlUtils.getBitmapFromURL(mImageUrl);
 
@@ -81,7 +74,7 @@ public class PhotoPagePresenter extends BasePresenter<PhotoPagePresenter.View> {
         Toast.makeText(mContext, R.string.image_saved, Toast.LENGTH_SHORT).show();
     }
 
-    public void shareImage(String mImageUrl) {
+    public static void shareImage(Context mContext, String mImageUrl) {
         // Create image file
         File sdCardDirectory = Environment.getExternalStorageDirectory();
         String filename = mImageUrl
@@ -100,7 +93,24 @@ public class PhotoPagePresenter extends BasePresenter<PhotoPagePresenter.View> {
         mContext.startActivity(intent);
     }
 
-    public interface View {
+    /**
+     * Unable to access flickr image due to owner's permissions
+     *
+     * @return
+     */
+    private boolean isNotAllowed(Context mContext, String mImageUrl) {
+        if (mImageUrl.endsWith("spaceball.gif")) {
+            Toast.makeText(mContext, mContext.getString(R.string.permission_denied), Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        return false;
+    }
 
+    private boolean isImageType(WebView.HitTestResult result) {
+        return result.getType() == WebView.HitTestResult.IMAGE_TYPE;
+    }
+
+    private boolean isSrcImageAnchorType(WebView.HitTestResult result) {
+        return result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE;
     }
 }

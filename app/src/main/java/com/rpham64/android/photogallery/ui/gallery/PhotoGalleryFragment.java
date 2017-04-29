@@ -118,6 +118,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
         viewSearch = (SearchView) itemSearch.getActionView();
         viewSearch.setOnQueryTextListener(this);
         viewSearch.setOnClickListener(this);
+        viewSearch.setMaxWidth(Integer.MAX_VALUE);          // Max Width
 
         if (PollService.isServiceAlarmOn(getActivity())) {
             itemToggle.setTitle(R.string.stop_polling);
