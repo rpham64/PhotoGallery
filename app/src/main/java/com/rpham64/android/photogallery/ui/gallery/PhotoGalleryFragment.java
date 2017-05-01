@@ -3,9 +3,10 @@ package com.rpham64.android.photogallery.ui.gallery;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,9 +34,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter;
 import jp.wasabeef.recyclerview.adapters.SlideInBottomAnimationAdapter;
-import jp.wasabeef.recyclerview.adapters.SlideInLeftAnimationAdapter;
 import jp.wasabeef.recyclerview.animators.FadeInAnimator;
 import tr.xip.errorview.ErrorView;
 
@@ -52,6 +51,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
 
     public static final int LOAD_MORE_OFFSET = 30;
 
+    @BindView(R.id.toolbar_fragment_photo_gallery) Toolbar toolbar;
     @BindView(R.id.recycler_view_photo_gallery_fragment) SuperRecyclerView recyclerView;
     @BindView(R.id.error) ErrorView viewError;
 
@@ -92,6 +92,8 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
         mUnbinder = ButterKnife.bind(this, view);
         mPresenter.attachView(this);
 
+        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+
         // Set layout manager to precache a full screen of contents
         DisplayMetrics displayMetrics = new DisplayMetrics();
         int heightPixels = displayMetrics.heightPixels;
@@ -117,7 +119,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
     public void onCreateOptionsMenu(final Menu menu, MenuInflater menuInflater) {
         super.onCreateOptionsMenu(menu, menuInflater);
 
-        menuInflater.inflate(R.menu.fragment_photo_gallery, menu);
+        menuInflater.inflate(R.menu.menu_fragment_photo_gallery, menu);
 
         final MenuItem itemToggle = menu.findItem(R.id.menu_item_toggle_polling);
         final MenuItem itemSearch = menu.findItem(R.id.menu_item_search);

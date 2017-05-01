@@ -26,6 +26,23 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
 
     }
 
+    public void setPollService(boolean turnPollServiceOn) {
+
+//        if (turnPollServiceOn) {
+//
+//            addSubscription(
+//                    Observable.create(new Observable.OnSubscribe<T>() {
+//                        @Override
+//                        public void call(Subscriber<? super T> subscriber) {
+//
+//                        }
+//                    })
+//            )
+//
+//        }
+
+    }
+
     public void getPage(int page, String query) {
 
         addSubscription(
@@ -46,7 +63,6 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryPresenter.V
                                 this::handleError
                         )
         );
-
     }
 
     private Observable<FlickrResponse> getPagedObservable(String query, int pageNumber) {
