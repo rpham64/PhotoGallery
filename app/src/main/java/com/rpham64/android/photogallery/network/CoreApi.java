@@ -1,7 +1,9 @@
 package com.rpham64.android.photogallery.network;
 
 import com.rpham64.android.photogallery.network.response.FlickrResponse;
+import com.rpham64.android.photogallery.network.response.SizesResponse;
 
+import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 import rx.Observable;
@@ -20,4 +22,7 @@ public interface CoreApi {
                                                    @Query("text") String query,
                                                    @Query("sort") String sortType
     );
+
+    @GET("services/rest?method=flickr.photos.getSizes")
+    Call<SizesResponse> getPhotoBySize(@Query("photo_id") String photoId);
 }

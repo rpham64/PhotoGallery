@@ -105,10 +105,10 @@ dependencies {
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
     // UI
     compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.github.chrisbanes.photoview:library:1.2.4'
     compile 'com.malinskiy:superrecyclerview:1.1.4'
     compile 'com.jakewharton:butterknife:8.4.0'
     apt 'com.jakewharton:butterknife-compiler:8.4.0'
     compile 'com.github.xiprox.errorview:library:2.+'
     compile 'jp.wasabeef:recyclerview-animators:2.2.6'
+    compile 'fr.tvbarthel.blurdialogfragment:lib:2.2.0'
 }
