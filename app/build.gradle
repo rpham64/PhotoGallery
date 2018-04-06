@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '26.0.3'
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         applicationId "com.rpham64.android.photogallery"
@@ -65,36 +65,36 @@ repositories {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-annotations:27.1.0'
-    compile 'com.android.support:appcompat-v7:25.4.0'
-    compile 'com.android.support:design:25.4.0'
-    compile 'com.android.support:recyclerview-v7:25.4.0'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.android.support:support-annotations:27.1.1'
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:design:27.1.1'
+    implementation 'com.android.support:recyclerview-v7:27.1.1'
     // Debugging
-    compile 'com.facebook.stetho:stetho:1.4.1'
-    compile 'com.facebook.stetho:stetho-okhttp3:1.4.1'
-    compile 'com.facebook.stetho:stetho-okhttp:1.4.1'
-    compile 'com.facebook.stetho:stetho-urlconnection:1.4.1'
-    compile 'com.orhanobut:logger:1.15'
+    implementation 'com.facebook.stetho:stetho:1.4.1'
+    implementation 'com.facebook.stetho:stetho-okhttp3:1.4.1'
+    implementation 'com.facebook.stetho:stetho-okhttp:1.4.1'
+    implementation 'com.facebook.stetho:stetho-urlconnection:1.4.1'
+    implementation 'com.orhanobut:logger:1.15'
     // Networking
-    compile 'com.squareup.retrofit2:retrofit:2.3.0'
-    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
-    compile 'com.squareup.retrofit2:adapter-rxjava:2.3.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava:2.3.0'
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
-    compile 'com.google.code.gson:gson:2.8.2'
-    compile 'com.path:android-priority-jobqueue:1.1.2'
-    compile 'io.reactivex.rxjava2:rxjava:2.0.0-RC3'
-    compile 'io.reactivex:rxandroid:1.2.1'
+    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.path:android-priority-jobqueue:1.1.2'
+    implementation 'io.reactivex.rxjava2:rxjava:2.0.0-RC3'
+    implementation 'io.reactivex:rxandroid:1.2.1'
     // Testing
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:3.0.1'
-    androidTestCompile 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
     // UI
-    compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.malinskiy:superrecyclerview:1.1.4'
+    implementation 'com.squareup.picasso:picasso:2.5.2'
+    implementation 'com.malinskiy:superrecyclerview:1.1.4'
     implementation 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
-    compile 'tr.xip.errorview:library:3.0.0'
-    compile 'jp.wasabeef:recyclerview-animators:2.2.6'
-    compile 'fr.tvbarthel.blurdialogfragment:lib:2.2.0'
+    implementation 'tr.xip.errorview:library:3.0.0'
+    implementation 'jp.wasabeef:recyclerview-animators:2.2.6'
+    implementation 'fr.tvbarthel.blurdialogfragment:lib:2.2.0'
 }
