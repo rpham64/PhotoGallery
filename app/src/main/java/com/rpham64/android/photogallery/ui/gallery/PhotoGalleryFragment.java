@@ -2,6 +2,7 @@ package com.rpham64.android.photogallery.ui.gallery;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -19,7 +20,6 @@ import android.widget.Toast;
 
 import com.malinskiy.superrecyclerview.OnMoreListener;
 import com.malinskiy.superrecyclerview.SuperRecyclerView;
-import com.rpham64.android.photogallery.ApplicationController;
 import com.rpham64.android.photogallery.R;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.services.PollService;
@@ -108,7 +108,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
 
         setupItemAnimator(1000);
 
-        viewError.setOnRetryListener(this);
+        viewError.setRetryListener(this);
 
         setupAdapter(mPhotos);
 
@@ -124,7 +124,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
         final MenuItem itemToggle = menu.findItem(R.id.menu_item_toggle_polling);
         final MenuItem itemSearch = menu.findItem(R.id.menu_item_search);
 
-        viewSearch = (SearchView) itemSearch.getActionView();
+        viewSearch = (SearchView) MenuItemCompat.getActionView(itemSearch);
         viewSearch.setOnQueryTextListener(this);
         viewSearch.setOnClickListener(this);
         viewSearch.setMaxWidth(Integer.MAX_VALUE);          // Max Width
@@ -166,7 +166,7 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
 
                 boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
                 PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
-                getActivity().invalidateOptionsMenu();
+//                getActivity().invalidateOptionsMenu();
 
                 return true;
 
@@ -246,7 +246,6 @@ public class PhotoGalleryFragment extends VisibleFragment implements View.OnClic
     public void showError() {
         recyclerView.setVisibility(View.GONE);
         viewError.setVisibility(View.VISIBLE);
-        viewError.setConfig(ApplicationController.getInstance().getErrorConfig());
     }
 
     @Override

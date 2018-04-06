@@ -5,7 +5,7 @@
     android:id="@+id/error"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:ev_retryButtonText="Retry"
+    app:ev_retryText="Retry"
     app:ev_subtitle="Something went terribly wrong!"
     android:visibility="gone"
     />

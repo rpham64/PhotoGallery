@@ -32,8 +32,6 @@ public class ApplicationController extends Application {
     private OkHttpClient mOkHttpClient;
     private CoreApi mCoreApi;
 
-    private ErrorView.Config mErrorConfig;
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -57,11 +55,6 @@ public class ApplicationController extends Application {
                     }
                 })
                 .build();
-
-        mErrorConfig = ErrorView.Config.create()
-                .title("Oops!")
-                .retryVisible(true)
-                .build();
     }
 
     public static ApplicationController getInstance() {
@@ -84,9 +77,5 @@ public class ApplicationController extends Application {
         }
 
         return mCoreApi;
-    }
-
-    public ErrorView.Config getErrorConfig() {
-        return mErrorConfig;
     }
 }

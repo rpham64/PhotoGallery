@@ -142,11 +142,11 @@ public class PhotoPageFragment extends VisibleFragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         switch (item.getItemId()) {
-            case android.R.id.home:
-                NavUtils.navigateUpFromSameTask(getActivity());
-                return true;
+            // TODO: Figure out why android.R.id.home doesn't exist.
+//            case android.R.id.home:
+//                NavUtils.navigateUpFromSameTask(getActivity());
+//                return true;
         }
 
         return super.onOptionsItemSelected(item);
