@@ -5,10 +5,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NavUtils;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ShareActionProvider;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -43,6 +43,7 @@ public class PhotoPageFragment extends VisibleFragment {
         String ARG_URI = "PhotoPageFragment.uri";
     }
 
+    @BindView(R.id.toolbar_photo_page_fragment) Toolbar toolbar;
     @BindView(R.id.fragment_photo_page_progress_bar) ProgressBar barProgress;
     @BindView(R.id.fragment_photo_page_web_view) WebView viewWeb;
     @BindView(R.id.error) ErrorView viewError;
@@ -77,6 +78,8 @@ public class PhotoPageFragment extends VisibleFragment {
 
         View view = inflater.inflate(R.layout.fragment_photo_page, container, false);
         mUnbinder = ButterKnife.bind(this, view);
+
+        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
 
         barProgress.setMax(100);
 
