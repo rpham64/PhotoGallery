@@ -1,18 +1,16 @@
 package com.rpham64.android.photogallery.utils;
 
+import com.rpham64.android.photogallery.network.ApiService;
+
 /**
  * Every presenter in the app must either implement this interface or extend BasePresenter
  * indicating the MvpView type that wants to be attached with.
  *
  * Source: https://github.com/ribot/android-boilerplate/tree/master/app/src/main/java/uk/co/ribot/androidboilerplate/ui/base
  */
-public interface IPresenter<V> {
-
-    void attachView(V mvpView);
-
+public interface IPresenter<T> {
+    void attachView(T mvpView);
     void detachView();
-
-    void onResume();
-    void onPause();
-    void onDestroy();
+    T getView();
+    ApiService getApiService();
 }

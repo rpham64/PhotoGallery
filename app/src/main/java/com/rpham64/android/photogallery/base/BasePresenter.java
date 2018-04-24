@@ -1,13 +1,8 @@
-package com.rpham64.android.photogallery.utils;
+package com.rpham64.android.photogallery.base;
 
-/**
- * Created by Rudolf on 9/26/2016.
- */
-
-import android.support.annotation.CallSuper;
-
-import com.rpham64.android.photogallery.ApplicationController;
-import com.rpham64.android.photogallery.network.CoreApi;
+import com.rpham64.android.photogallery.network.ApiService;
+import com.rpham64.android.photogallery.network.RestClient;
+import com.rpham64.android.photogallery.utils.IPresenter;
 
 import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;
@@ -25,20 +20,12 @@ public class BasePresenter<T> implements IPresenter<T> {
     private CompositeSubscription subs = new CompositeSubscription();
 
     @Override
-    @CallSuper
-    public void onResume() {
-
+    public void attachView(T view) {
+        mView = view;
     }
 
     @Override
-    @CallSuper
-    public void onPause() {
-
-    }
-
-    @Override
-    @CallSuper
-    public void onDestroy() {
+    public void detachView() {
         mView = null;
 
         if (subs != null) {
@@ -47,24 +34,16 @@ public class BasePresenter<T> implements IPresenter<T> {
     }
 
     @Override
-    public void attachView(T view) {
-        mView = view;
+    public T getView() {
+        return mView;
     }
 
     @Override
-    public void detachView() {
-        mView = null;
+    public ApiService getApiService() {
+        return RestClient.getInstance().getApiService();
     }
 
     protected void addSubscription(Subscription sub) {
         subs.add(sub);
-    }
-
-    protected CoreApi getCoreApi() {
-        return ApplicationController.getInstance().getCoreApi();
-    }
-
-    public T getView() {
-        return mView;
     }
 }
