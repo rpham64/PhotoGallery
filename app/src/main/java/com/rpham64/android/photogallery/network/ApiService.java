@@ -9,10 +9,9 @@ import retrofit2.http.Query;
 import rx.Observable;
 
 /**
- * Created by Rudolf on 9/23/2016.
+ * An interface for handling RxJava and Retrofit HTTP network calls.
  */
-
-public interface CoreApi {
+public interface ApiService {
 
     @GET("services/rest?method=flickr.photos.getRecent")
     Observable<FlickrResponse> getRecentPhotosRx(@Query("page") int page);
