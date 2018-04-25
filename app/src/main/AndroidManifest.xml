@@ -37,26 +37,6 @@
                   android:configChanges="keyboardHidden|orientation|screenSize"
                   android:parentActivityName=".ui.gallery.PhotoGalleryActivity"/>
 
-        <!-- Polling Service -->
-        <service android:name=".services.PollService"
-            android:exported="true"/>
-
-        <!-- Broadcast Standalone Receiver -->
-        <receiver android:name="com.rpham64.android.photogallery.services.StartupReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver>
-
-        <receiver android:name="com.rpham64.android.photogallery.services.NotificationReceiver"
-            android:exported="true">
-            <intent-filter
-                android:priority="-999">
-                <action android:name="com.rpham64.android.photogallery.SHOW_NOTIFICATION"/>
-
-            </intent-filter>
-        </receiver>
-
     </application>
 
 </manifest>
