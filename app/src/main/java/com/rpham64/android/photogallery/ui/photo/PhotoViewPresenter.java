@@ -3,7 +3,7 @@ package com.rpham64.android.photogallery.ui.photo;
 import com.rpham64.android.photogallery.models.Size;
 import com.rpham64.android.photogallery.models.Sizes;
 import com.rpham64.android.photogallery.network.response.SizesResponse;
-import com.rpham64.android.photogallery.utils.BasePresenter;
+import com.rpham64.android.photogallery.base.BasePresenter;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ public class PhotoViewPresenter extends BasePresenter<PhotoViewPresenter.View> {
     }
 
     public void getPhoto() {
-        Call<SizesResponse> call = getCoreApi().getPhotoBySize(photoId);
+        Call<SizesResponse> call = getApiService().getPhotoBySize(photoId);
         call.enqueue(new Callback<SizesResponse>() {
             @Override
             public void onResponse(Call<SizesResponse> call, Response<SizesResponse> response) {

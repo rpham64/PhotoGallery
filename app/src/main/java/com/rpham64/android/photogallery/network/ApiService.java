@@ -6,7 +6,6 @@ import com.rpham64.android.photogallery.network.response.SizesResponse;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
-import rx.Observable;
 
 /**
  * An interface for handling RxJava and Retrofit HTTP network calls.
@@ -14,10 +13,10 @@ import rx.Observable;
 public interface ApiService {
 
     @GET("services/rest?method=flickr.photos.getRecent")
-    Observable<FlickrResponse> getRecentPhotosRx(@Query("page") int page);
+    Call<FlickrResponse> getRecentPhotosRx(@Query("page") int page);
 
     @GET("services/rest?method=flickr.photos.search")
-    Observable<FlickrResponse> getPhotosBySearchRx(@Query("page") int page,
+    Call<FlickrResponse> getPhotosBySearchRx(@Query("page") int page,
                                                    @Query("text") String query,
                                                    @Query("sort") String sortType
     );

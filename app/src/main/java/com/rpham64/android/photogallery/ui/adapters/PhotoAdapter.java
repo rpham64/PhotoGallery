@@ -71,7 +71,7 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.PhotoHolder>
     }
 
     public void setPhotos(List<Photo> photos) {
-        this.mPhotos = photos;
+        mPhotos = photos;
         notifyDataSetChanged();
     }
 

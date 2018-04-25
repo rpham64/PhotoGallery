@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ShareActionProvider;
@@ -23,7 +24,6 @@ import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
 import com.rpham64.android.photogallery.R;
-import com.rpham64.android.photogallery.ui.VisibleFragment;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -35,7 +35,7 @@ import tr.xip.errorview.ErrorView;
  *
  * Created by Rudolf on 3/22/2016.
  */
-public class PhotoPageFragment extends VisibleFragment {
+public class PhotoPageFragment extends Fragment {
 
     private static final String TAG = PhotoPageFragment.class.getName();
 
