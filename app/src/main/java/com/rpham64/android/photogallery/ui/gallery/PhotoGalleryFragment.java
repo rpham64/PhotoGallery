@@ -25,49 +25,47 @@ import com.malinskiy.superrecyclerview.SuperRecyclerView;
 import com.rpham64.android.photogallery.R;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.ui.adapters.PhotoAdapter;
-import com.rpham64.android.photogallery.utils.PagedResult;
 import com.rpham64.android.photogallery.utils.PreCachingLayoutManager;
-import com.rpham64.android.photogallery.utils.QueryPreferences;
+import com.rpham64.android.photogallery.utils.SearchQuerySharedPreference;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import butterknife.Unbinder;
 import jp.wasabeef.recyclerview.adapters.SlideInBottomAnimationAdapter;
 import jp.wasabeef.recyclerview.animators.FadeInAnimator;
 import tr.xip.errorview.ErrorView;
 
 /**
- * Main Fragment hosted by PhotoGalleryActivity
- *
- * Created by Rudolf on 3/12/2016.
+ * Main UI for the Photo Gallery screen. Displays a grid of photos that users can see and interact
+ * with.
  */
-public class PhotoGalleryFragment extends Fragment implements View.OnClickListener,
-        PhotoGalleryContract.View, SearchView.OnQueryTextListener,
-        SwipeRefreshLayout.OnRefreshListener, OnMoreListener, ErrorView.RetryListener {
+public class PhotoGalleryFragment extends Fragment implements PhotoGalleryContract.View,
+        SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener, OnMoreListener,
+        ErrorView.RetryListener {
 
     private static final String TAG = PhotoGalleryFragment.class.getName();
 
     // Offset subtracted from total number of photos to call the "load more" function".
     private static final int LOAD_MORE_OFFSET = 30;
 
-    @BindView(R.id.toolbar_fragment_photo_gallery) Toolbar toolbar;
-    @BindView(R.id.recycler_view_photo_gallery_fragment) SuperRecyclerView recyclerView;
-    @BindView(R.id.error) ErrorView viewError;
+    @BindView(R.id.toolbar_fragment_photo_gallery) Toolbar mToolbar;
+    @BindView(R.id.recycler_view_photo_gallery_fragment) SuperRecyclerView mRecyclerViewPhotos;
+    @BindView(R.id.error) ErrorView mViewError;
+
+    @OnClick
+    public void onSearchViewClicked() {
+        mPresenter.onSearchViewClicked();
+    }
 
     private Unbinder mUnbinder;
 
     private PhotoAdapter mAdapter;
     private PhotoGalleryPresenter mPresenter;
-    private SearchView viewSearch;
-
-    private List<Photo> mPhotos;
-
-    private String mQuery;
-    private int mCurrentPage;
-    private int mPages;
+    private SearchView mViewSearch;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -76,14 +74,11 @@ public class PhotoGalleryFragment extends Fragment implements View.OnClickListen
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);            // Retain fragment state on configuration changes
-        setHasOptionsMenu(true);            // Include toolbar
+        setRetainInstance(true);  // Retain fragment state on configuration changes
+        setHasOptionsMenu(true);  // Include toolbar
 
-        mPresenter = new PhotoGalleryPresenter();
-        mCurrentPage = 1;
-
-        // Retrieve last saved search query, if it exists.
-        mQuery = QueryPreferences.getStoredQuery(getActivity());
+        SearchQuerySharedPreference searchQuerySharedPreference = new SearchQuerySharedPreference(getContext());
+        mPresenter = new PhotoGalleryPresenter(searchQuerySharedPreference);
     }
 
     @Nullable
@@ -95,24 +90,24 @@ public class PhotoGalleryFragment extends Fragment implements View.OnClickListen
         mUnbinder = ButterKnife.bind(this, view);
         mPresenter.attachView(this);
 
-        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+        ((AppCompatActivity) getActivity()).setSupportActionBar(mToolbar);
 
         setupRecyclerView();
 
-        viewError.setRetryListener(this);
+        mViewError.setRetryListener(this);
 
         // Retrieve first list of photos.
-        fetchPhotos();
+        mPresenter.getPhotos();
 
         return view;
     }
 
     private void setupRecyclerView() {
         final PreCachingLayoutManager mLayoutManager = buildPreCachingLayoutManager();
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.getRecyclerView().setItemAnimator(new FadeInAnimator());
-        recyclerView.setRefreshListener(this);
-        recyclerView.setOnMoreListener(this);
+        mRecyclerViewPhotos.setLayoutManager(mLayoutManager);
+        mRecyclerViewPhotos.getRecyclerView().setItemAnimator(new FadeInAnimator());
+        mRecyclerViewPhotos.setRefreshListener(this);
+        mRecyclerViewPhotos.setOnMoreListener(this);
         setupAdapter(new ArrayList<>());
         setupItemAnimator(1000);
     }
@@ -131,12 +126,12 @@ public class PhotoGalleryFragment extends Fragment implements View.OnClickListen
             mAdapter = new PhotoAdapter(getContext(), photos);
             SlideInBottomAnimationAdapter animationAdapter = new SlideInBottomAnimationAdapter(mAdapter);
             animationAdapter.setDuration(500);
-            recyclerView.setAdapter(animationAdapter);
+            mRecyclerViewPhotos.setAdapter(animationAdapter);
         }
     }
 
     private void setupItemAnimator(int duration) {
-        final RecyclerView.ItemAnimator animator = recyclerView.getRecyclerView().getItemAnimator();
+        final RecyclerView.ItemAnimator animator = mRecyclerViewPhotos.getRecyclerView().getItemAnimator();
         animator.setAddDuration(duration);
         animator.setRemoveDuration(duration);
         animator.setMoveDuration(duration);
@@ -157,10 +152,9 @@ public class PhotoGalleryFragment extends Fragment implements View.OnClickListen
 
         final MenuItem itemSearch = menu.findItem(R.id.menu_item_search);
 
-        viewSearch = (SearchView) MenuItemCompat.getActionView(itemSearch);
-        viewSearch.setOnQueryTextListener(this);
-        viewSearch.setOnClickListener(this);
-        viewSearch.setMaxWidth(Integer.MAX_VALUE);
+        mViewSearch = (SearchView) MenuItemCompat.getActionView(itemSearch);
+        mViewSearch.setOnQueryTextListener(this);
+        mViewSearch.setMaxWidth(Integer.MAX_VALUE);
     }
 
     @Override
@@ -168,11 +162,11 @@ public class PhotoGalleryFragment extends Fragment implements View.OnClickListen
         switch (item.getItemId()) {
 
             case R.id.menu_item_refresh:
-                refresh();
+                mPresenter.refresh();
                 return true;
 
             case R.id.menu_item_clear:
-                QueryPreferences.setStoredQuery(getActivity(), null);
+                mPresenter.clearSearchQuery();
                 return true;
 
             default:
@@ -184,22 +178,16 @@ public class PhotoGalleryFragment extends Fragment implements View.OnClickListen
      * Displays the list of photos.
      *
      * @param photos List of photos to display in the gallery.
-     * @param pagedResult Object for keeping track of current page of results.
+     * @param currentPage Current page number of results
      */
     @Override
-    public void showPhotos(List<Photo> photos, PagedResult pagedResult) {
-        if (viewError.getVisibility() == View.VISIBLE) {
-            recyclerView.setVisibility(View.VISIBLE);
-            viewError.setVisibility(View.GONE);
-        }
+    public void showPhotos(List<Photo> photos, int currentPage) {
+        hideError();
 
-        mCurrentPage = pagedResult.page;
-        mPages = pagedResult.pages;
-        Toast.makeText(getContext(), "Loading page: " + mCurrentPage, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "Loading page: " + currentPage, Toast.LENGTH_SHORT).show();
 
-        if (mCurrentPage == 1) {
-            // Remove all old photos and set to the new photo list.
-            mPhotos = photos;
+        if (currentPage == 1) {
+            // Remove all old photos from adapter and set to the new photo list.
             mAdapter.setPhotos(photos);
         } else {
             // Add the new photos to the adapter.
@@ -212,15 +200,48 @@ public class PhotoGalleryFragment extends Fragment implements View.OnClickListen
         boolean canLoadMore =
                 itemsBeforeMore + maxLastVisiblePosition + LOAD_MORE_OFFSET >= overallItemsCount;
 
-        if (canLoadMore && mCurrentPage < mPages) {
-            // Increment page number to load the next page.
-            mCurrentPage++;
-            fetchPhotos();
-        } else if (mCurrentPage == mPages) {
-            // No more pages to load, so display an error toast.
-            Toast.makeText(getContext(), R.string.toast_no_more_pages_to_load,
-                    Toast.LENGTH_SHORT).show();
+        if (canLoadMore) {
+            mPresenter.loadMorePhotos();
+        } else {
+            showCannotLoadMoreToast();
         }
+    }
+
+    @Override
+    public void showCannotLoadMoreToast() {
+        // No more photos to load, so display an error toast.
+        Toast.makeText(getContext(), R.string.toast_no_more_photos_to_load,
+                Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void setSearchViewQuery(String query) {
+        mViewSearch.setQuery(query, false);
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        Log.i(TAG, "Query submitted: " + query);
+
+        mPresenter.storeSearchQuery(query);
+        mPresenter.getPhotosBySearch(query, 1);  // Clear old results and display page 1 of search results.
+
+        // Clear query in SearchView.
+        mViewSearch.setQuery("", false);
+
+        // Hide keyboard on submit.
+        mViewSearch.clearFocus();
+
+        // Collapse SearchView widget.
+        mViewSearch.setIconified(true);
+
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        Log.d(TAG, "Query: " + newText);
+        return false;
     }
 
     @Override
@@ -230,59 +251,25 @@ public class PhotoGalleryFragment extends Fragment implements View.OnClickListen
 
     @Override
     public void refresh() {
-        mQuery = QueryPreferences.getStoredQuery(getActivity());
-        mCurrentPage = 1;
-        fetchPhotos();
-        recyclerView.getRecyclerView().getLayoutManager().scrollToPosition(0);
-    }
-
-    @Override
-    public boolean onQueryTextSubmit(String query) {
-        Log.i(TAG, "QueryTextSubmit: " + query);
-
-        QueryPreferences.setStoredQuery(getActivity(), query);
-
-        viewSearch.clearFocus();            // Hides keyboard on submit
-        viewSearch.setQuery("", false);
-        viewSearch.setIconified(true);      // Collapses SearchView widget
-
-        refresh();
-
-        return true;
-    }
-
-    @Override
-    public boolean onQueryTextChange(String newText) {
-        Log.d(TAG, "QueryTextChange: " + newText);
-        return false;
-    }
-
-    @Override
-    public void showError() {
-        recyclerView.setVisibility(View.GONE);
-        viewError.setVisibility(View.VISIBLE);
+        mRecyclerViewPhotos.getRecyclerView().getLayoutManager().scrollToPosition(0);
+        mPresenter.refresh();
     }
 
     @Override
     public void onRetry() {
         Toast.makeText(getContext(), "Retrying...", Toast.LENGTH_SHORT).show();
-        refresh();
+        mPresenter.refresh();
     }
 
     @Override
-    public void onClick(View v) {
-        String query = QueryPreferences.getStoredQuery(getActivity());
-        viewSearch.setQuery(query, false);
+    public void showError() {
+        mRecyclerViewPhotos.setVisibility(View.GONE);
+        mViewError.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * Fetches recent photos (if search query is empty) or by search (if search query exists).
-     */
-    private void fetchPhotos() {
-        if (mQuery == null) {
-            mPresenter.getRecentPhotos(mCurrentPage);
-        } else {
-            mPresenter.searchPhotos(mQuery, mCurrentPage);
-        }
+    @Override
+    public void hideError() {
+        mRecyclerViewPhotos.setVisibility(View.VISIBLE);
+        mViewError.setVisibility(View.GONE);
     }
 }

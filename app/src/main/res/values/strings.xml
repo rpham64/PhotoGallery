@@ -15,6 +15,6 @@
     <string name="text_empty_list">Nothing here.</string>
     <string name="image_saved">Image saved!</string>
     <string name="permission_denied">Permission denied by the owner. Unable to interact with this image.</string>
-    <string name="toast_no_more_pages_to_load">Huh, seems there are no more photos results :(. Try again in a few minutes!</string>
+    <string name="toast_no_more_photos_to_load">Cannot load any more photos.</string>
 
 </resources>

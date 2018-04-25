@@ -1,47 +1,53 @@
 package com.rpham64.android.photogallery.ui.gallery;
 
-import android.util.Log;
-
-import com.orhanobut.logger.Logger;
+import com.rpham64.android.photogallery.base.BasePresenter;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.models.Photos;
+import com.rpham64.android.photogallery.network.ApiService;
 import com.rpham64.android.photogallery.network.response.FlickrResponse;
-import com.rpham64.android.photogallery.base.BasePresenter;
-import com.rpham64.android.photogallery.utils.PagedResult;
+import com.rpham64.android.photogallery.utils.SearchQuerySharedPreference;
 
 import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 /**
- * Created by Rudolf on 9/23/2016.
+ * Handles business logic of using ({@link ApiService}) to load images from Flickr's servers,
+ * listening to events from the View ({@link PhotoGalleryFragment}), and updating the View's UI.
  */
-
 public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryContract.View>
         implements PhotoGalleryContract.Presenter {
 
     private static final String TAG = PhotoGalleryPresenter.class.getSimpleName();
 
+    // Sort Order Parameters (for Search function)
     private static final String SORT_RELEVANCE = "relevance";
+
+    // SharedPreference helper class for accessing stored search query.
+    private SearchQuerySharedPreference mSearchQuerySharedPreference;
 
     // Callback object for handling response after retrieving photos from Flickr.
     private Callback<FlickrResponse> mFetchPhotosCallback;
 
-    public PhotoGalleryPresenter() {
+    // Last submitted search query from View's SearchView widget.
+    private String mSearchQuery;
+
+    // Page values from Flickr's API network calls.
+    private int mCurrentPage;
+    private int mMaxNumPages;
+
+    public PhotoGalleryPresenter(SearchQuerySharedPreference searchQuerySharedPreference) {
+        mSearchQuerySharedPreference = searchQuerySharedPreference;
+        mSearchQuery = mSearchQuerySharedPreference.getStoredQuery();
+        mCurrentPage = 1;
 
         // Initialize callback for fetching recent photos and search.
         mFetchPhotosCallback = new Callback<FlickrResponse>() {
             @Override
             public void onResponse(Call<FlickrResponse> call, Response<FlickrResponse> response) {
-                Log.i(TAG, "Response: " + response.toString());
-
                 if (!response.isSuccessful() || response.body() == null) {
-                    Log.e(TAG, "GET request for recent photos failed.");
                     if (getView() != null) {
                         getView().showError();
                     }
@@ -49,19 +55,13 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryContract.Vi
 
                 Photos photosResponse = response.body().photosResponse;
                 List<Photo> photoList = photosResponse.photos;
-                Log.i(TAG, "Got photos list of size: " + photoList.size());
+                mCurrentPage = photosResponse.page;
+                mMaxNumPages = photosResponse.pages;
 
                 // Send photos to the View, if it exists.
                 if (getView() != null) {
-
-                    // Create PagedResult to store the response's current page and total number of pages.
-                    PagedResult pagedResult = new PagedResult(
-                            photosResponse.page,
-                            photosResponse.pages
-                    );
-
                     // Pass photo list back to the View.
-                    getView().showPhotos(photoList, pagedResult);
+                    getView().showPhotos(photoList, mCurrentPage);
                 }
             }
 
@@ -73,21 +73,70 @@ public class PhotoGalleryPresenter extends BasePresenter<PhotoGalleryContract.Vi
     }
 
     @Override
+    public void getPhotos() {
+        mSearchQuery = mSearchQuerySharedPreference.getStoredQuery();
+
+        if (mSearchQuery == null) {
+            getRecentPhotos(mCurrentPage);
+        } else {
+            getPhotosBySearch(mSearchQuery, mCurrentPage);
+        }
+    }
+
+    @Override
     public void getRecentPhotos(int page) {
-        Call<FlickrResponse> getPhotosCall = getApiService().getRecentPhotosRx(page);
+        Call<FlickrResponse> getPhotosCall = getApiService().getRecentPhotos(page);
         getPhotosCall.enqueue(mFetchPhotosCallback);
     }
 
     @Override
-    public void searchPhotos(String searchQuery, int page) {
+    public void getPhotosBySearch(String query, int page) {
         Call<FlickrResponse> getPhotosBySearchCall =
-                getApiService().getPhotosBySearchRx(page, searchQuery, SORT_RELEVANCE);
+                getApiService().getPhotosBySearch(query, page, SORT_RELEVANCE);
         getPhotosBySearchCall.enqueue(mFetchPhotosCallback);
     }
 
-    private void handleError(Throwable throwable) {
-        Logger.d(throwable.toString());
+    @Override
+    public void loadMorePhotos() {
+        if (mCurrentPage + 1 <= mMaxNumPages) {
+            mCurrentPage++;  // Increment current page to get the next page of photos.
+            getPhotos();
+        } else {
+            if (getView() != null) {
+                getView().showCannotLoadMoreToast();
+            }
+        }
+    }
+
+    @Override
+    public void onSearchViewClicked() {
+        if (getView() != null) {
+            String query = mSearchQuerySharedPreference.getStoredQuery();
+            getView().setSearchViewQuery(query);
+        }
+    }
+
+    @Override
+    public void storeSearchQuery(String query) {
+        mSearchQuerySharedPreference.setStoredQuery(query);
+    }
+
+    @Override
+    public void clearSearchQuery() {
+        mSearchQuerySharedPreference.setStoredQuery(null);
+    }
+
+    @Override
+    public void refresh() {
+        mCurrentPage = 1;  // Reset current page back to 1.
+        getPhotos();  // Clear results and retrieve the first page of photos.
+    }
+
+    @Override
+    public void handleError(Throwable throwable) {
         throwable.printStackTrace();
-        getView().showError();
+        if (getView() != null) {
+            getView().showError();
+        }
     }
 }
