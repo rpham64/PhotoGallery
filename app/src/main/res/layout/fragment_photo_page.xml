@@ -7,8 +7,11 @@
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar_photo_page_fragment"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        app:theme="@style/ToolbarTheme"
+        android:layout_height="?android:attr/actionBarSize"
+        android:background="?android:attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         />
 
     <ProgressBar
@@ -17,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/toolbar_photo_page_fragment"
         android:visibility="gone"
-        android:background="?attr/colorPrimary"
+        android:background="?android:attr/colorPrimary"
         style="?android:progressBarStyleHorizontal"
         />
 

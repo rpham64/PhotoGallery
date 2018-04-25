@@ -1,15 +1,18 @@
 <resources>
 
-<!--    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-    </style>-->
+    <style name="AppTheme" parent="Base.AppTheme" />
 
-    <style name="MyMaterialTheme" parent="MyMaterialTheme.Base">
+    <style name="AppTheme.OverlapSystemBar" parent="Base.AppTheme">
+        <item name="android:windowDrawsSystemBarBackgrounds">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:fitsSystemWindows">true</item>
+    </style>
+
+    <style name="MyMaterialTheme" parent="AppTheme">
         <item name="android:colorPrimary">@color/primary_material_dark_1</item>
         <item name="android:colorPrimaryDark">@color/primary_dark_material_dark</item>
         <item name="android:colorAccent">@color/accent_material_light</item>
     </style>
+
 </resources>
