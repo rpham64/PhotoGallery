@@ -19,9 +19,11 @@ import fr.tvbarthel.lib.blurdialogfragment.SupportBlurDialogFragment;
 
 /**
  * Created by Rudolf on 6/19/2017.
+ *
+ * TODO: Create PhotoViewActivity.
  */
 
-public class PhotoViewFragment extends SupportBlurDialogFragment implements PhotoViewPresenter.View {
+public class PhotoViewFragment extends SupportBlurDialogFragment implements PhotoViewContract.View {
 
     public interface Arguments {
         String PHOTO_ID = PhotoViewFragment.class.getName() + ".photoId";
@@ -31,7 +33,7 @@ public class PhotoViewFragment extends SupportBlurDialogFragment implements Phot
     @BindView(R.id.img_photo) ImageView imgPhoto;
 
     private Unbinder mUnbinder;
-    private PhotoViewPresenter mPresenter;
+    private PhotoViewContract.Presenter mPresenter;
 
     private String mPhotoId;
     private String mPhotoUrl;
@@ -52,8 +54,6 @@ public class PhotoViewFragment extends SupportBlurDialogFragment implements Phot
         setRetainInstance(true);
 
         mPhotoId = getArguments().getString(Arguments.PHOTO_ID);
-        mPresenter = new PhotoViewPresenter(mPhotoId);
-        mPresenter.attachView(this);
     }
 
     @Nullable
@@ -84,7 +84,6 @@ public class PhotoViewFragment extends SupportBlurDialogFragment implements Phot
     public void onDestroyView() {
         super.onDestroyView();
         mUnbinder.unbind();
-        mPresenter.detachView();
     }
 
     @Override
@@ -99,5 +98,10 @@ public class PhotoViewFragment extends SupportBlurDialogFragment implements Phot
     @OnClick(R.id.img_photo)
     public void onViewClicked() {
         dismiss();
+    }
+
+    @Override
+    public void setPresenter(PhotoViewContract.Presenter presenter) {
+        mPresenter = presenter;
     }
 }

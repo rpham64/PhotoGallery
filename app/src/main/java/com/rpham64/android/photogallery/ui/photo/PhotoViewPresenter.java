@@ -1,9 +1,12 @@
 package com.rpham64.android.photogallery.ui.photo;
 
+import android.support.annotation.NonNull;
+
 import com.rpham64.android.photogallery.models.Size;
 import com.rpham64.android.photogallery.models.Sizes;
+import com.rpham64.android.photogallery.network.ApiService;
+import com.rpham64.android.photogallery.network.RestClient;
 import com.rpham64.android.photogallery.network.response.SizesResponse;
-import com.rpham64.android.photogallery.base.BasePresenter;
 
 import java.util.List;
 
@@ -15,16 +18,21 @@ import retrofit2.Response;
  * Created by Rudolf on 6/19/2017.
  */
 
-public class PhotoViewPresenter extends BasePresenter<PhotoViewPresenter.View> {
+public class PhotoViewPresenter implements PhotoViewContract.Presenter {
 
-    private String photoId;
+    private String mPhotoId;
 
-    public PhotoViewPresenter(String photoId) {
-        this.photoId = photoId;
+    private PhotoViewContract.View mPhotoView;
+
+    public PhotoViewPresenter(@NonNull PhotoViewContract.View photoView,
+                              @NonNull String photoId) {
+        mPhotoView = photoView;
+        mPhotoId = photoId;
     }
 
+    @Override
     public void getPhoto() {
-        Call<SizesResponse> call = getApiService().getPhotoBySize(photoId);
+        Call<SizesResponse> call = getApiService().getPhotoBySize(mPhotoId);
         call.enqueue(new Callback<SizesResponse>() {
             @Override
             public void onResponse(Call<SizesResponse> call, Response<SizesResponse> response) {
@@ -37,8 +45,7 @@ public class PhotoViewPresenter extends BasePresenter<PhotoViewPresenter.View> {
                     // Get largest photo size from sizeList
                     // List has sizes in ascending order, so largest is the last Size in sizeList
                     String url = sizeList.get(sizeList.size() - 1).source;
-                    getView().showPhoto(url);
-
+                    mPhotoView.showPhoto(url);
                 }
             }
 
@@ -49,7 +56,8 @@ public class PhotoViewPresenter extends BasePresenter<PhotoViewPresenter.View> {
         });
     }
 
-    public interface View {
-        void showPhoto(String url);
+    @Override
+    public ApiService getApiService() {
+        return RestClient.getInstance().getApiService();
     }
 }
