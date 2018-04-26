@@ -63,8 +63,9 @@ public class PhotoGalleryFragment extends Fragment implements PhotoGalleryContra
 
     private Unbinder mUnbinder;
 
+    private PhotoGalleryContract.Presenter mPresenter;
+
     private PhotoAdapter mAdapter;
-    private PhotoGalleryPresenter mPresenter;
     private SearchView mViewSearch;
 
     public static PhotoGalleryFragment newInstance() {
@@ -76,9 +77,6 @@ public class PhotoGalleryFragment extends Fragment implements PhotoGalleryContra
         super.onCreate(savedInstanceState);
         setRetainInstance(true);  // Retain fragment state on configuration changes
         setHasOptionsMenu(true);  // Include toolbar
-
-        SearchQuerySharedPreference searchQuerySharedPreference = new SearchQuerySharedPreference(getContext());
-        mPresenter = new PhotoGalleryPresenter(searchQuerySharedPreference);
     }
 
     @Nullable
@@ -88,7 +86,6 @@ public class PhotoGalleryFragment extends Fragment implements PhotoGalleryContra
 
         View view = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
         mUnbinder = ButterKnife.bind(this, view);
-        mPresenter.attachView(this);
 
         ((AppCompatActivity) getActivity()).setSupportActionBar(mToolbar);
 
@@ -140,7 +137,6 @@ public class PhotoGalleryFragment extends Fragment implements PhotoGalleryContra
 
     @Override
     public void onDestroyView() {
-        mPresenter.detachView();
         mUnbinder.unbind();
         super.onDestroyView();
     }
@@ -271,5 +267,10 @@ public class PhotoGalleryFragment extends Fragment implements PhotoGalleryContra
     public void hideError() {
         mRecyclerViewPhotos.setVisibility(View.VISIBLE);
         mViewError.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void setPresenter(PhotoGalleryContract.Presenter presenter) {
+        mPresenter = presenter;
     }
 }

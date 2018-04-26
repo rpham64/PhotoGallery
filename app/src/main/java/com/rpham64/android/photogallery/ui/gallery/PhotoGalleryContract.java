@@ -1,12 +1,14 @@
 package com.rpham64.android.photogallery.ui.gallery;
 
+import com.rpham64.android.photogallery.base.BasePresenter;
+import com.rpham64.android.photogallery.base.BaseView;
 import com.rpham64.android.photogallery.models.Photo;
 
 import java.util.List;
 
 public interface PhotoGalleryContract {
 
-    interface View {
+    interface View extends BaseView<Presenter> {
 
         void showPhotos(List<Photo> photos, int currentPage);
 
@@ -21,7 +23,7 @@ public interface PhotoGalleryContract {
         void hideError();
     }
 
-    interface Presenter {
+    interface Presenter extends BasePresenter {
 
         void getPhotos();
 
