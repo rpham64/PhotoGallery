@@ -35,7 +35,7 @@ public class FlickrFetchr {
      * @return
      * @throws IOException
      */
-    public byte[] getUrlBytes(String urlSpec) throws IOException {
+    public byte[] downloadData(String urlSpec) throws IOException {
 
         // Create URL object from String (like a website link with http)
         URL url = new URL(urlSpec);
@@ -72,20 +72,21 @@ public class FlickrFetchr {
     }
 
     /**
-     * Converts result from getUrlBytes to a String
+     * Converts result from downloadData to a String
      *
      * @param urlSpec
      * @return
      * @throws IOException
      */
-    public String getUrlString(String urlSpec) throws IOException {
-        return new String(getUrlBytes(urlSpec));
+    public String getJson(String urlSpec) throws IOException {
+        return new String(downloadData(urlSpec));
     }
 
     /**
-     * Builds an appropriate request URL and fetches its contents
+     * Builds an appropriate request URL and fetches its contents.
+     * Runs in the BACKGROUND THREAD of AsyncTask.
      */
-    public List<GalleryItem> fetchItems(int page) {
+    public List<GalleryItem> getItems(int page) {
 
         List<GalleryItem> items = new ArrayList<>();
 
@@ -103,7 +104,7 @@ public class FlickrFetchr {
                     .build().toString();
 
             // Fetch contents from request URL
-            String jsonString = getUrlString(url);
+            String jsonString = getJson(url);
 
             Log.i(TAG, "Received JSON: " + jsonString);
 

@@ -36,7 +36,7 @@ public class PhotoGalleryFragment extends Fragment {
     private List<GalleryItem> mItems = new ArrayList<>();
 
     // HandlerThread for managing photo downloads
-    private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
+    private PhotoDownloaderHandlerThread<PhotoHolder> mPhotoDownloaderHandlerThread;
 
     // Last page fetched
     private int lastPageFetched = 1;
@@ -49,14 +49,21 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);            // Retain fragment state on configuration changes
+
+        // Use AsyncTask to get json string of flickr data in the background data.
+        // This then adds the data to mItems list.
+        // Note that we only have objects containing the String data, NOT THE DOWNLOADED IMAGES.
+
+        // 1) Build URL string of data.
+        // 2) Use background thread to download data as a json string.
+        // 3) Store the json data into GalleryItem POJOs.
+        // 4) Store the GalleryItem objects into mItems list.
         new FetchItemsTask().execute();
 
-        Handler responseHandler = new Handler();
-        mThumbnailDownloader = new ThumbnailDownloader<>(responseHandler);
-
-        mThumbnailDownloader.setThumbnailDownloadListener(
-
-                new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
+        Handler mainThreadHandler = new Handler();
+        mPhotoDownloaderHandlerThread = new PhotoDownloaderHandlerThread<>(mainThreadHandler);
+        mPhotoDownloaderHandlerThread.setPhotoDownloaderListener(
+                new PhotoDownloaderHandlerThread.PhotoDownloaderListener<PhotoHolder>() {
 
                     /**
                      * Binds thumbnail drawable to PhotoHolder on download
@@ -65,19 +72,19 @@ public class PhotoGalleryFragment extends Fragment {
                      * @param bitmap
                      */
                     @Override
-                    public void onThumbnailDownloadeded(PhotoHolder photoHolder, Bitmap bitmap) {
+                    public void onThumbnailDownloaded(PhotoHolder photoHolder, Bitmap bitmap) {
+
+                        // Create drawable of bitmap.
                         Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+
+                        // Bind drawable to photoholder.
                         photoHolder.bindDrawable(drawable);
                     }
-
                 }
-
         );
 
-        mThumbnailDownloader.start();
-        mThumbnailDownloader.getLooper();
-
-        Log.i(TAG, "Background thread started.");
+        mPhotoDownloaderHandlerThread.start();  // Start HandlerThread.
+//        mPhotoDownloaderHandlerThread.getLooper();  // ???
     }
 
     @Nullable
@@ -127,14 +134,14 @@ public class PhotoGalleryFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mThumbnailDownloader.clearQueue();      // Clean out downloader
+        mPhotoDownloaderHandlerThread.clearMessageQueue();      // Clean out downloader
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        mThumbnailDownloader.quit();
+        mPhotoDownloaderHandlerThread.quit();
 
         Log.i(TAG, "Background thread destroyed.");
     }
@@ -187,7 +194,7 @@ public class PhotoGalleryFragment extends Fragment {
             photoHolder.bindDrawable(placeholder);
 
             // Queue downloaded thumbnail image
-            mThumbnailDownloader.queueThumbnail(photoHolder, galleryItem.getUrl());
+            mPhotoDownloaderHandlerThread.queueThumbnail(photoHolder, galleryItem.getUrl());
         }
 
         @Override
@@ -232,7 +239,7 @@ public class PhotoGalleryFragment extends Fragment {
          */
         @Override
         protected List<GalleryItem> doInBackground(Integer... params) {
-            return new FlickrFetchr().fetchItems(lastPageFetched);
+            return new FlickrFetchr().getItems(lastPageFetched);
         }
 
         /**
