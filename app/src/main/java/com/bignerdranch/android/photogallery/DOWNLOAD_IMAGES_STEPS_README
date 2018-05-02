@@ -1,0 +1,42 @@
+Note on Image Downloading in this Commit
+
+Notes:
+1) FlickrFetchr is a separate class that's instantiated to do the network call and JSON parsing.
+This can be replaced with Retrofit.
+
+2) There are two Handlers: one for PhotoGalleryFragment's Main Thread, and
+another for PhotoDownloaderHandlerThread.
+
+3) PhotoDownloaderHandlerThread contains a listener callback that's called within a Runnable.
+This Runnable is posted by PhotoGalleryFragment's Handler to pass the Runnable object to the looper
+on the Main Thread, which then runs the callback method to pass the downloaded image.
+
+Steps:
+
+1) FetchItemsTask uses the URL to downloaded the data as a JSON string.
+
+2) The JSON data is then stored within GalleryItem objects, which are contained in an ArrayList.
+
+3) Main thread's handler, PhotoDownloaderHandlerThread, and this thread's handler are
+then created.
+
+4) PhotoDownloaderHandlerThread starts.
+
+5) As the RecyclerView and adapter are being instantiated, upon binding an image to each ViewHolder,
+PhotoDownloaderHandlerThread calls queueThumbnail() method, passing the ViewHolder and image URL.
+
+6) The Handler in PhotoDownloaderHandlerThread then creates a Message object using the passed
+ViewHolder object.
+
+7) Message object is enqueued onto the HandlerThread's MessageQueue, which is then dequeued and sent
+back to the Handler using the HandlerThread's looper.
+
+8) HandlerThread's Handler then processes the Message object, retrieving the ViewHolder and its
+URL from the Request Map.
+
+9) FlickrFetchr is called to download the image from the URL as a Bitmap.
+
+10) Handler from PhotoGalleryFragment posts a Runnable that runs the callback to send the Bitmap
+and its ViewHolder back to PhotoGalleryFragment.
+
+11) PhotoGalleryFragment then binds the Bitmap to the ViewHolder, updating the UI.
