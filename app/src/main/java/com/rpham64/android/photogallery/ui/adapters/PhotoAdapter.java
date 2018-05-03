@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import com.rpham64.android.photogallery.R;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.ui.photo.PhotoViewFragment;
+import com.rpham64.android.photogallery.ui.photo.PhotoViewPresenter;
 import com.rpham64.android.photogallery.ui.web.PhotoPageActivity;
 import com.squareup.picasso.Picasso;
 
@@ -119,6 +120,8 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.PhotoHolder>
 
             PhotoViewFragment fragment = PhotoViewFragment.newInstance(mPhoto.id);
             fragment.show(fragmentManager, Tags.dialogPhoto);
+
+            new PhotoViewPresenter(fragment, mPhoto.id);
 
             return true;
         }

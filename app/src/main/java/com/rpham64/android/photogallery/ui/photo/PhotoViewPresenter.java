@@ -28,6 +28,8 @@ public class PhotoViewPresenter implements PhotoViewContract.Presenter {
                               @NonNull String photoId) {
         mPhotoView = photoView;
         mPhotoId = photoId;
+
+        mPhotoView.setPresenter(this);
     }
 
     @Override
