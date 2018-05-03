@@ -2,7 +2,6 @@ package com.rpham64.android.photogallery.ui.gallery;
 
 import android.support.annotation.NonNull;
 
-import com.rpham64.android.photogallery.base.BasePresenter;
 import com.rpham64.android.photogallery.models.Photo;
 import com.rpham64.android.photogallery.models.Photos;
 import com.rpham64.android.photogallery.network.ApiService;
@@ -26,6 +25,8 @@ public class PhotoGalleryPresenter implements PhotoGalleryContract.Presenter {
 
     // Sort Order Parameters (for Search function)
     private static final String SORT_RELEVANCE = "relevance";
+    private static final String SORT_INTERESTING_DESCENDING = "interestingness-desc";
+    private static final String SORT_INTERESTING_ASCENDING = "interestingness-asc";
 
     private PhotoGalleryContract.View mPhotoGalleryView;
 
