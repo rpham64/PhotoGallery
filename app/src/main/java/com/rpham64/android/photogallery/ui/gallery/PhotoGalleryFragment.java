@@ -158,7 +158,7 @@ public class PhotoGalleryFragment extends Fragment implements PhotoGalleryContra
         switch (item.getItemId()) {
 
             case R.id.menu_item_refresh:
-                mPresenter.refresh();
+                refresh();
                 return true;
 
             case R.id.menu_item_clear:
@@ -231,6 +231,9 @@ public class PhotoGalleryFragment extends Fragment implements PhotoGalleryContra
         // Collapse SearchView widget.
         mViewSearch.setIconified(true);
 
+        // Smooth scroll back to top.
+        mRecyclerViewPhotos.getRecyclerView().smoothScrollToPosition(0);
+
         return true;
     }
 
@@ -247,7 +250,7 @@ public class PhotoGalleryFragment extends Fragment implements PhotoGalleryContra
 
     @Override
     public void refresh() {
-        mRecyclerViewPhotos.getRecyclerView().getLayoutManager().scrollToPosition(0);
+        mRecyclerViewPhotos.getRecyclerView().smoothScrollToPosition(0);
         mPresenter.refresh();
     }
 

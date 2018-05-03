@@ -2,6 +2,7 @@ package com.rpham64.android.photogallery.utils;
 
 import android.content.Context;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 
@@ -10,8 +11,11 @@ import android.util.AttributeSet;
  */
 
 public class PreCachingLayoutManager extends GridLayoutManager {
+
     private static final int DEFAULT_EXTRA_LAYOUT_SPACE = 600;
-    private int extraLayoutSpace = -1;
+
+    private Context mContext;
+    private int mExtraLayoutSpace = -1;
 
     public PreCachingLayoutManager(Context context, int spanCount) {
         super(context, spanCount);
@@ -19,7 +23,8 @@ public class PreCachingLayoutManager extends GridLayoutManager {
 
     public PreCachingLayoutManager(Context context, int spanCount, int extraLayoutSpace) {
         super(context, spanCount);
-        this.extraLayoutSpace = extraLayoutSpace;
+        mContext = context;
+        mExtraLayoutSpace = extraLayoutSpace;
     }
 
     public PreCachingLayoutManager(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
@@ -31,14 +36,28 @@ public class PreCachingLayoutManager extends GridLayoutManager {
     }
 
     public void setExtraLayoutSpace(int extraLayoutSpace) {
-        this.extraLayoutSpace = extraLayoutSpace;
+        this.mExtraLayoutSpace = extraLayoutSpace;
     }
 
     @Override
     protected int getExtraLayoutSpace(RecyclerView.State state) {
-        if (extraLayoutSpace > 0) {
-            return extraLayoutSpace;
+        if (mExtraLayoutSpace > 0) {
+            return mExtraLayoutSpace;
         }
         return DEFAULT_EXTRA_LAYOUT_SPACE;
+    }
+
+    /**
+     * Enables smooth scrolling to a specified position in RecyclerView.
+     *
+     * @param recyclerView The RecyclerView using this layout manager.
+     * @param state The RecyclerView's current state.
+     * @param position Position in RecyclerView to smooth scroll to.
+     */
+    @Override
+    public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
+        RecyclerView.SmoothScroller smoothScroller = new LinearSmoothScroller(mContext);
+        smoothScroller.setTargetPosition(position);
+        startSmoothScroll(smoothScroller);
     }
 }
